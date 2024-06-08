@@ -21,7 +21,8 @@ workflow TASK_ALIGN {
 		].join(" ")
 	)
 
-	
+	emit:
+	bam = BOWTIE2_ALIGN.out.bam
 
 	
 
