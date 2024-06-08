@@ -41,7 +41,8 @@ workflow CHIPSEQ {
 		params.multimapping ? params.multimapping : [],
 		params.local_mode,
 		params.mapq_threshold ? params.mapq_threshold : [],
-		params.chr_filter ? params.chr_filter : []
+		params.chr_filter ? params.chr_filter : [],
+		params.pseudorep_seed ? params.pseudorep_seed : 0
 	)
 
 

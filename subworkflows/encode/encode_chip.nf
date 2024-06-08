@@ -2,6 +2,7 @@ include { TASK_ALIGN } from "./task_align"
 include { TASK_FILTER } from "./task_filter"
 
 include {BAM_TO_TA} from "../../modules/encode/bam_to_ta/main"
+include {CREATE_PSEUDOREPS} from "../../modules/encode/create_pseudoreplicates/main"
 
 workflow ENCODE_CHIP {
 	take:
@@ -14,6 +15,7 @@ workflow ENCODE_CHIP {
 	local_mode
 	mapq_threshold
 	ch_chr_filter
+	pseudorep_seed
 
 	main:
 
@@ -35,6 +37,11 @@ workflow ENCODE_CHIP {
 
 	BAM_TO_TA(
 		TASK_FILTER.out.bam
+	)
+
+	CREATE_PSEUDOREPS(
+		BAM_TO_TA.out.tagAlign,
+		pseudorep_seed
 	)
 
 
