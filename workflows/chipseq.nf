@@ -35,10 +35,13 @@ workflow CHIPSEQ {
 	ENCODE_CHIP(
 		PREPARE_FASTQ.out.fastq,
 		PREPARE_GENOME.out.genome_fasta,
+		PREPARE_GENOME.out.genome_fai,
 		PREPARE_GENOME.out.bowtie2_index,
 		PREPARE_GENOME.out.bowtie2_mito_index,
 		params.multimapping ? params.multimapping : [],
-		params.local_mode
+		params.local_mode,
+		params.mapq_threshold ? params.mapq_threshold : [],
+		params.chr_filter ? params.chr_filter : []
 	)
 
 
