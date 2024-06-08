@@ -1,0 +1,6 @@
+name: gzip_gunzip
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - conda-forge::gzip=1.13
