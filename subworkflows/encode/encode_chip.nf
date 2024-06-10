@@ -1,8 +1,11 @@
 include { TASK_ALIGN } from "./task_align"
 include { TASK_FILTER } from "./task_filter"
 
-include {BAM_TO_TA} from "../../modules/encode/bam_to_ta/main"
-include {CREATE_PSEUDOREPS} from "../../modules/encode/create_pseudoreplicates/main"
+include { BAM_TO_TA         } from "../../modules/encode/bam_to_ta/main"
+include { CREATE_PSEUDOREPS } from "../../modules/encode/create_pseudoreplicates/main"
+include { RUN_SPP           } from "../../modules/local/phantompeakqualtools/run_spp/main"
+include { EXTRACT_XCOR      } from "../../modules/local/phantompeakqualtools/extract_xcor/main"
+include { CAT_FILES         } from "../../modules/local/cat_files/main"
 
 workflow ENCODE_CHIP {
 	take:
@@ -39,10 +42,81 @@ workflow ENCODE_CHIP {
 		TASK_FILTER.out.bam
 	)
 
+	
+
+
+	BAM_TO_TA.out.tagAlign
+		.map{meta, tagalign ->
+			[ [group: meta.group, single_end: meta.single_end], meta, tagalign ]
+		}
+		.groupTuple(by: 0)
+		.branch{group_meta, meta, tagalign ->
+			single: tagalign.size() == 1
+				return [meta[0], tagalign]
+			multiple: tagalign.size() > 1
+				return [group_meta, meta, tagalign]
+		}
+		.set { ch_tagalign_branched }
+
+	ch_tagalign_branched.multiple
+		.map {group_meta, meta, tagalign ->
+			[[id: group_meta.group + "_pooled", sample_id: group_meta.group + "_pooled", sample_type: "pooled"] + group_meta, tagalign]
+		}
+		.set {ch_pool_ta_input}
+	
+	CAT_FILES(ch_pool_ta_input,"tagAlign.gz")
+
+	ch_tagalign_branched.single
+		.mix(CAT_FILES.out.output)
+		.set { ch_pr_input }
+
 	CREATE_PSEUDOREPS(
-		BAM_TO_TA.out.tagAlign,
+		ch_pr_input,
 		pseudorep_seed
 	)
+	CREATE_PSEUDOREPS.out.pr1
+		.map{meta, tagalign ->
+			def new_meta = meta.clone()
+			new_meta.sample_type = "pr"
+			new_meta.id = new_meta.id + "_pr1"
+			[ new_meta, tagalign ]
+		}
+		.mix(
+			CREATE_PSEUDOREPS.out.pr2
+				.map{meta, tagalign ->
+					def new_meta = meta.clone()
+					new_meta.sample_type = "pr"
+					new_meta.id = new_meta.id + "_pr2"
+					[ new_meta, tagalign ]
+				}
+		)
+		.set { ch_pr_ta_output }
+	
+	// create new channel with tagAligns for: samples, pooled, pseudoreplicates
+	BAM_TO_TA.out.tagAlign
+		.mix(CAT_FILES.out.output)
+		.mix(ch_pr_ta_output)
+		.set{ch_processed_tagalign}
+	
+	// run SPP on processed tagAligns to get fragment length
+	RUN_SPP(
+		ch_processed_tagalign,
+		"tf",
+		"chrM"
+	)
+	EXTRACT_XCOR(RUN_SPP.out.rdata)
+
+	RUN_SPP.out.spp
+		.join(ch_processed_tagalign, by: 0)
+		.map{meta, spp, ta ->
+			def new_meta = meta.clone()
+			new_meta.frag_len = spp.readLines()[0].split("\t")[2] - ~/,.*/
+			[ new_meta, ta ]
+		}
+		.set { ch_processed_tagalign }
+	
+
+	//CREATE_PSEUDOREPS.out.tagAlign.view()
 
 
 	publish:

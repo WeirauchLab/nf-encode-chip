@@ -1,6 +1,9 @@
 
-include { CAT_FASTQ } from "../../modules/local/cat_fastq/main"
-include { GAWK_READLENGTHS } from '../../modules/local/gawk/readlengths/main'
+include { CAT_FASTQ                       } from "../../modules/local/cat_fastq/main"
+include { GAWK_READLENGTHS                } from '../../modules/local/gawk/readlengths/main'
+include { FASTQC_FASTQC as FASTQC_RAW     } from '../../modules/local/fastqc/main'
+include { FASTQC_FASTQC as FASTQC_TRIMMED } from '../../modules/local/fastqc/main'
+include { FASTP_FASTP                     } from '../../modules/local/fastp/fastp/main'
 
 workflow PREPARE_FASTQ {
 	take:
@@ -40,11 +43,36 @@ workflow PREPARE_FASTQ {
 		}
 		.set {ch_fastq_concat}
 	
+	FASTQC_RAW(ch_fastq_concat)
+	
 	// TODO: add trimming
+	FASTP_FASTP(
+		ch_fastq_concat,
+		[]
+	)
+	FASTP_FASTP.out.fastq
+		.map{meta, fastq ->
+			if(meta.single_end) {
+				[meta, fastq, []]
+			} else {
+				[meta, fastq[0], fastq[1]]
+			}
+		}
+		.set {ch_fastq_trimmed}
+
+	FASTQC_TRIMMED(ch_fastq_trimmed)
 	ch_fastq_trimmed = Channel.empty()
 
+	publish:
+	FASTQC_RAW.out       >> "fastqc/raw"
+	FASTQC_TRIMMED.out   >> "fastqc/trimmed"
+	FASTP_FASTP.out.json >> "fastp"
+	FASTP_FASTP.out.html >> "fastp"
+
 	emit:
-	fastq = ch_fastq_concat
-	fastq_trimmed = ch_fastq_trimmed 
+	fastq              = ch_fastq_concat
+	fastq_trimmed      = ch_fastq_trimmed
+	fastqc_raw_zip     = FASTQC_RAW.out.zip
+	fastqc_trimmed_zip = FASTQC_TRIMMED.out.zip
 
 }

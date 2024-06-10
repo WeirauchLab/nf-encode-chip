@@ -1,2 +1,4 @@
 id,group,fastq_1,fastq_2
-ENCSR000DYI_r1,MYC_CONTROL,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR000DYI/fastq_subsampled/rep1.subsampled.25.fastq.gz,
+ENCSR000DYI_rep1,ENCSR000DYI,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR000DYI/fastq_subsampled/rep1.subsampled.25.fastq.gz,
+ENCSR936XTK_rep1,ENCSR936XTK,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR936XTK/fastq_subsampled/rep1-R1.subsampled.50.fastq.gz,
+ENCSR936XTK_rep2,ENCSR936XTK,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR936XTK/fastq_subsampled/rep2-R1.subsampled.50.fastq.gz,
