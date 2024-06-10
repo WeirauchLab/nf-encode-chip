@@ -59,8 +59,6 @@ workflow PREPARE_FASTQ {
 			}
 		}
 		.set {ch_fastq_trimmed}
-	
-	ch_fastq_trimmed.view()
 
 	FASTQC_TRIMMED(ch_fastq_trimmed)
 	ch_fastq_trimmed = Channel.empty()

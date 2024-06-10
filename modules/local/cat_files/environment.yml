@@ -1,0 +1,6 @@
+name: cat_fastq
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::cat=5.2.3
