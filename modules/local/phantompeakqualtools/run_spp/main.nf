@@ -10,7 +10,7 @@ process RUN_SPP {
 	val mito_chr_name
 
 	output:
-	tuple val(meta), path("*.spp.out")  , optional: false, emit: out
+	tuple val(meta), path("*.spp.out")  , optional: false, emit: out, topic: spp_log
 	tuple val(meta), path("*.spp.pdf")  , optional: false, emit: pdf
 	tuple val(meta), path("*.spp.Rdata"), optional: false, emit: rdata
 

@@ -11,7 +11,7 @@ process PICARD_MARKDUPLICATES {
 
 	output:
 	tuple val(meta), path("*.bam")        , optional: true, emit: bam
-	tuple val(meta), path("*.metrics.txt"), optional: true, emit: metrics
+	tuple val(meta), path("*.metrics.txt"), optional: true, emit: metrics, topic: picard_markduplicates_log
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.dupmarked"

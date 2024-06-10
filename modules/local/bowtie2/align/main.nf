@@ -13,7 +13,7 @@ process BOWTIE2_ALIGN {
 	output:
 	tuple val(meta), path("*.bam")        , optional: false, emit: bam
 	tuple val(meta), path("*.bai")        , optional: false, emit: bai
-	tuple val(meta), path("*.bowtie2.log"), optional: false, emit: log
+	tuple val(meta), path("*.bowtie2.log"), optional: false, emit: log, topic: bowtie2_align_log
 	tuple val(task.process), eval("bowtie2 --version | head -n 1 | sed 's/^.*version/bowtie2: version/'"), emit: version, topic: versions
 
 

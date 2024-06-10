@@ -3,6 +3,8 @@ include { PREPARE_FASTQ  } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP    } from "../subworkflows/encode/encode_chip"
 
+include { MULTIQC } from "../modules/local/multiqc/main"
+
 //include { TASK_ALIGN    } from "../subworkflows/encode/task_align"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
@@ -31,6 +33,8 @@ workflow CHIPSEQ {
 		ch_input,
 		params.read_length_reads ? params.read_length_reads : []
 	)
+	ch_multiqc_fastqc_raw     = PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]}
+	ch_multiqc_fastqc_trimmed = PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]}
 
 	ENCODE_CHIP(
 		PREPARE_FASTQ.out.fastq,
@@ -44,6 +48,19 @@ workflow CHIPSEQ {
 		params.chr_filter ? params.chr_filter : [],
 		params.pseudorep_seed ? params.pseudorep_seed : 0
 	)
+
+	MULTIQC(
+		params.multiqc_config ? file(params.multiqc_config) : [],
+		ch_multiqc_fastqc_raw,
+		Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
+		ch_multiqc_fastqc_trimmed,
+		Channel.topic('bowtie2_align_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]}
+	)
+
+	publish:
+	MULTIQC.out >> "multiqc"
 
 
 }
