@@ -1,5 +1,7 @@
-include { TASK_ALIGN } from "./task_align"
-include { TASK_FILTER } from "./task_filter"
+include { TASK_ALIGN          } from "./task_align"
+include { TASK_FILTER         } from "./task_filter"
+include { TASK_MACS2          } from "./task_macs2"
+include { TASK_POSTPROC_PEAKS } from "./task_postproc_peaks"
 
 include { BAM_TO_TA         } from "../../modules/encode/bam_to_ta/main"
 include { CREATE_PSEUDOREPS } from "../../modules/encode/create_pseudoreplicates/main"
@@ -12,6 +14,7 @@ workflow ENCODE_CHIP {
 	ch_fastq
 	ch_fasta
 	ch_fai
+	ch_gensz
 	ch_bowtie2_index
 	ch_bowtie2_mito_index
 	multimapping
@@ -19,6 +22,7 @@ workflow ENCODE_CHIP {
 	mapq_threshold
 	ch_chr_filter
 	pseudorep_seed
+	ch_blacklist_peaks
 
 	main:
 
@@ -41,9 +45,6 @@ workflow ENCODE_CHIP {
 	BAM_TO_TA(
 		TASK_FILTER.out.bam
 	)
-
-	
-
 
 	BAM_TO_TA.out.tagAlign
 		.map{meta, tagalign ->
@@ -114,9 +115,19 @@ workflow ENCODE_CHIP {
 			[ new_meta, ta ]
 		}
 		.set { ch_processed_tagalign }
-	
 
-	//CREATE_PSEUDOREPS.out.tagAlign.view()
+	TASK_MACS2(
+		ch_processed_tagalign,
+		ch_fai,
+		ch_gensz
+	)
+
+	TASK_POSTPROC_PEAKS(
+		TASK_MACS2.out.narrowPeak,
+		ch_blacklist_peaks,
+		ch_chr_filter
+	)
+
 
 
 	publish:

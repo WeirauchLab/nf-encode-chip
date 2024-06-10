@@ -23,7 +23,8 @@ workflow CHIPSEQ {
 		params.mito_fasta,
 		params.mito_chr_name,
 		params.bowtie2_index,
-		params.bowtie2_mito_index
+		params.bowtie2_mito_index,
+		params.blacklist_peaks
 	)
 
 	Channel
@@ -42,13 +43,15 @@ workflow CHIPSEQ {
 		PREPARE_FASTQ.out.fastq,
 		PREPARE_GENOME.out.genome_fasta,
 		PREPARE_GENOME.out.genome_fai,
+		PREPARE_GENOME.out.gensz,
 		PREPARE_GENOME.out.bowtie2_index,
 		PREPARE_GENOME.out.bowtie2_mito_index,
 		params.multimapping ? params.multimapping : [],
 		params.local_mode,
 		params.mapq_threshold ? params.mapq_threshold : [],
 		params.chr_filter ? params.chr_filter : [],
-		params.pseudorep_seed ? params.pseudorep_seed : 0
+		params.pseudorep_seed ? params.pseudorep_seed : 0,
+		PREPARE_GENOME.out.blacklist_peaks
 	)
 
 	if (params.enable_sourmash) {
