@@ -12,3 +12,11 @@ module_order:
       info: "This section of the report shows FastQC results after adapter trimming."
       path_filters:
         - "data/fastqc/trimmed/*.zip"
+
+extra_fn_clean_exts:
+  - "_matches"
+  - ".lowq_filt"
+
+sp:
+  sourmash/gather:
+    fn: "*_matches.csv"

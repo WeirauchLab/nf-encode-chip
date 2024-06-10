@@ -1,7 +1,8 @@
 
-include { PREPARE_FASTQ  } from "../subworkflows/local/prepare_fastq"
-include { PREPARE_GENOME } from "../subworkflows/local/prepare_genome"
-include { ENCODE_CHIP    } from "../subworkflows/encode/encode_chip"
+include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
+include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
+include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
+include { SOURMASH_CLASSIFIER } from "../subworkflows/local/sourmash_classifier"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
@@ -27,6 +28,7 @@ workflow CHIPSEQ {
 
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
+		.map{ meta, fq1, fq2 -> [ meta + [sample_type: "sample"], fq1, fq2 ] }
 		.set{ch_input}
 	
 	PREPARE_FASTQ(
@@ -49,6 +51,14 @@ workflow CHIPSEQ {
 		params.pseudorep_seed ? params.pseudorep_seed : 0
 	)
 
+	if (params.enable_sourmash) {
+		SOURMASH_CLASSIFIER(
+			PREPARE_FASTQ.out.fastq,
+			params.sourmash_db ? file(params.sourmash_db) : [],
+			params.sourmash_params ? params.sourmash_params : []
+		)
+	}
+
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],
 		ch_multiqc_fastqc_raw,
@@ -56,7 +66,8 @@ workflow CHIPSEQ {
 		ch_multiqc_fastqc_trimmed,
 		Channel.topic('bowtie2_align_log').collect{it[1]}.ifEmpty{[]},
 		Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
-		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]}
+		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]}
 	)
 
 	publish:

@@ -12,6 +12,7 @@ process MULTIQC {
 	path "data/bowtie2_align/*"
 	path "data/picard_markduplicates/*"
 	path "data/spp/*"
+	path "data/sourmash/gather/*"
 
 	output:
 	path "multiqc_report.html", optional: false, emit: html
