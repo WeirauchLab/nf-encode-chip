@@ -2,6 +2,7 @@ include { TASK_ALIGN          } from "./task_align"
 include { TASK_FILTER         } from "./task_filter"
 include { TASK_MACS2          } from "./task_macs2"
 include { TASK_POSTPROC_PEAKS } from "./task_postproc_peaks"
+include { TASK_IDR            } from "./task_idr_peaks"
 
 include { BAM_TO_TA         } from "../../modules/encode/bam_to_ta/main"
 include { CREATE_PSEUDOREPS } from "../../modules/encode/create_pseudoreplicates/main"
@@ -23,6 +24,8 @@ workflow ENCODE_CHIP {
 	ch_chr_filter
 	pseudorep_seed
 	ch_blacklist_peaks
+	ch_idr_threshold_col
+	ch_idr_threshold
 
 	main:
 
@@ -128,6 +131,11 @@ workflow ENCODE_CHIP {
 		ch_chr_filter
 	)
 
+	TASK_IDR(
+		TASK_POSTPROC_PEAKS.out.narrowPeak,
+		ch_idr_threshold_col,
+		ch_idr_threshold
+	)
 
 
 	publish:

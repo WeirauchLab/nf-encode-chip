@@ -51,7 +51,9 @@ workflow CHIPSEQ {
 		params.mapq_threshold ? params.mapq_threshold : [],
 		params.chr_filter ? params.chr_filter : [],
 		params.pseudorep_seed ? params.pseudorep_seed : 0,
-		PREPARE_GENOME.out.blacklist_peaks
+		PREPARE_GENOME.out.blacklist_peaks,
+		params.idr_threshold_col ? params.idr_threshold_col : "p.value",
+		params.idr_threshold ? params.idr_threshold : 0.05
 	)
 
 	if (params.enable_sourmash) {
