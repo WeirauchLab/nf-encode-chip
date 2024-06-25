@@ -11,7 +11,7 @@ workflow PREPARE_FASTQ {
 	read_length_reads // int or []
 
 	main:
-	
+
 	ch_fastq
 		.groupTuple(by: 0)
 		.map{meta, fastq1, fastq2 ->
