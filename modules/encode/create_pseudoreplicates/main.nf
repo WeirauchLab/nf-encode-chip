@@ -1,6 +1,7 @@
 process CREATE_PSEUDOREPS {
 	tag "${meta.id}"
 
+	// TODO: add container and conda
 	//conda "${moduleDir}/environment.yml"
 	//container ""
 
@@ -9,6 +10,7 @@ process CREATE_PSEUDOREPS {
 	val pseudorep_seed
 
 	output:
+	tuple val(meta), path("*.tagAlign.gz"), optional: false, emit: tagAlign
 	tuple val(meta), path("*pr1.tagAlign.gz"), optional: false, emit: pr1
 	tuple val(meta), path("*pr2.tagAlign.gz"), optional: false, emit: pr2
 

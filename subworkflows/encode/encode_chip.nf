@@ -48,70 +48,66 @@ workflow ENCODE_CHIP {
 	BAM_TO_TA(
 		TASK_FILTER.out.bam
 	)
+	ch_tagalign = BAM_TO_TA.out.tagAlign
 
-	BAM_TO_TA.out.tagAlign
-		.map{meta, tagalign ->
-			[ [group: meta.group, single_end: meta.single_end], meta, tagalign ]
+	if(true){
+		CREATE_PSEUDOREPS(
+			ch_tagalign,
+			pseudorep_seed
+		)
+
+		ch_tagalign
+			.mix(
+				CREATE_PSEUDOREPS.out.pr1
+					.map{meta, tagalign ->
+						def new_meta = meta.clone()
+						new_meta.sample_type = "pr1"
+						new_meta.id = new_meta.id + "_pr1"
+						[ new_meta, tagalign ]
+					}
+			)
+			.mix(
+				CREATE_PSEUDOREPS.out.pr2
+					.map{meta, tagalign ->
+						def new_meta = meta.clone()
+						new_meta.sample_type = "pr2"
+						new_meta.id = new_meta.id + "_pr2"
+						[ new_meta, tagalign ]
+					}
+			)
+			.set { ch_tagalign }
+	}
+
+	ch_tagalign
+		.map{meta, ta ->
+			def group_meta = [group: meta.group, single_end: meta.single_end, sample_type: meta.sample_type]
+			[group_meta, ta]
 		}
 		.groupTuple(by: 0)
-		.branch{group_meta, meta, tagalign ->
-			single: tagalign.size() == 1
-				return [meta[0], tagalign]
-			multiple: tagalign.size() > 1
-				return [group_meta, meta, tagalign]
+		.filter{meta, ta -> ta.size() > 1}
+		.map{meta, ta -> 
+			def new_meta = meta.clone()
+			new_meta.sample_type = meta.sample_type + "_pooled"
+			new_meta.id = [new_meta.group,new_meta.sample_type].join("_") 
+			[new_meta, ta]
 		}
-		.set { ch_tagalign_branched }
+		.set { ch_pool_ta_input }
 
-	ch_tagalign_branched.multiple
-		.map {group_meta, meta, tagalign ->
-			[[id: group_meta.group + "_pooled", sample_id: group_meta.group + "_pooled", sample_type: "pooled"] + group_meta, tagalign]
-		}
-		.set {ch_pool_ta_input}
-	
 	CAT_FILES(ch_pool_ta_input,"tagAlign.gz")
 
-	ch_tagalign_branched.single
-		.mix(CAT_FILES.out.output)
-		.set { ch_pr_input }
-
-	CREATE_PSEUDOREPS(
-		ch_pr_input,
-		pseudorep_seed
-	)
-	CREATE_PSEUDOREPS.out.pr1
-		.map{meta, tagalign ->
-			def new_meta = meta.clone()
-			new_meta.sample_type = "pr"
-			new_meta.id = new_meta.id + "_pr1"
-			[ new_meta, tagalign ]
-		}
-		.mix(
-			CREATE_PSEUDOREPS.out.pr2
-				.map{meta, tagalign ->
-					def new_meta = meta.clone()
-					new_meta.sample_type = "pr"
-					new_meta.id = new_meta.id + "_pr2"
-					[ new_meta, tagalign ]
-				}
-		)
-		.set { ch_pr_ta_output }
+	ch_tagalign = ch_tagalign.mix(CAT_FILES.out.output)
 	
-	// create new channel with tagAligns for: samples, pooled, pseudoreplicates
-	BAM_TO_TA.out.tagAlign
-		.mix(CAT_FILES.out.output)
-		.mix(ch_pr_ta_output)
-		.set{ch_processed_tagalign}
 	
 	// run SPP on processed tagAligns to get fragment length
 	RUN_SPP(
-		ch_processed_tagalign,
+		ch_tagalign,
 		"tf",
 		"chrM"
 	)
 	EXTRACT_XCOR(RUN_SPP.out.rdata)
 
 	RUN_SPP.out.spp
-		.join(ch_processed_tagalign, by: 0)
+		.join(ch_tagalign, by: 0)
 		.map{meta, spp, ta ->
 			def new_meta = meta.clone()
 			new_meta.frag_len = spp.readLines()[0].split("\t")[2] - ~/,.*/
@@ -143,5 +139,8 @@ workflow ENCODE_CHIP {
 
 	emit:
 	tagAlign = BAM_TO_TA.out.tagAlign
+	dedup_bam = TASK_FILTER.out.bam
+	dedup_bai = TASK_FILTER.out.bai
+	xcor_csv = EXTRACT_XCOR.out.csv
 
 }

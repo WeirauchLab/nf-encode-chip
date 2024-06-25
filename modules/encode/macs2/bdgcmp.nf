@@ -9,8 +9,8 @@ process MACS2_BDGCMP {
 	container "community.wave.seqera.io/library/bedtools_macs2_ucsc-bedgraphtobigwig:831ad901e42b7721"
 
 	input:
-	tuple val(meta), path(treat_pileup), path(control_lambda), path(tagalign), val(scale_factor)
-	tuple val(meta), path(fai)
+	tuple val(meta) , path(treat_pileup), path(control_lambda), path(tagalign), val(scale_factor)
+	tuple val(meta2), path(fai)
 
 	output:
 	tuple val(meta), path("*.fc.signal.bigwig")  , optional: false, emit: fc_bigwig

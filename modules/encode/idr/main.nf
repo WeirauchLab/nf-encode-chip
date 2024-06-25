@@ -5,7 +5,7 @@ process IDR_PEAKS {
 	container "community.wave.seqera.io/library/bedtools_bionumpy_idr:bbfce8dd45f2b8eb"
 
 	input:
-	tuple val(meta), path(peak_list), path(peaks)
+	tuple val(meta), path(peak1), path(peak2), path(peak3)
 	val rank
 	val idr_threshold
 
@@ -20,8 +20,8 @@ process IDR_PEAKS {
 	def negative_log10_thresh = -Math.log10(idr_threshold)
 	"""
 	idr \\
-		--samples ${peaks} \\
-		--peak-list ${peak_list} \\
+		--peak-list ${peak1} \\
+		--samples ${peak2} ${peak3} \\
 		--input-file-type narrowPeak \\
 		--output-file ${prefix}.unthresholded-peaks.txt \\
 		--rank ${rank} \\
