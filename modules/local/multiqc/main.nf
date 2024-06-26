@@ -14,6 +14,7 @@ process MULTIQC {
     path "data/spp/*"
     path "data/sourmash/gather/*"
     path "data/spp_xcor/*"
+    path "data/encode_reproducibility_stats/idr/*"
 
     output:
     path "multiqc_report.html", optional: false, emit: html
@@ -23,6 +24,7 @@ process MULTIQC {
     script:
     def args = task.ext.args ?: ""
     """
-    multiqc -f -o . -n multiqc_report "data/"
+    run_multiqc.py
+    
     """
 }

@@ -8,7 +8,7 @@ process EXTRACT_XCOR {
 	tuple val(meta), path(rdata)
 
 	output:
-	tuple val(meta), path("*.crosscorr.csv"), optional: false, emit: csv
+	tuple val(meta), path("*.crosscorr.csv"), optional: false, emit: csv, topic: spp_xcorr
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

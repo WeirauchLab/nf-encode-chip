@@ -66,28 +66,29 @@ workflow CHIPSEQ {
 	//)
 
 
-	//if (params.enable_sourmash) {
-	//	SOURMASH_CLASSIFIER(
-	//		PREPARE_FASTQ.out.fastq,
-	//		params.sourmash_db ? file(params.sourmash_db) : [],
-	//		params.sourmash_params ? params.sourmash_params : []
-	//	)
-	//}
+	if (params.enable_sourmash) {
+		SOURMASH_CLASSIFIER(
+			PREPARE_FASTQ.out.fastq,
+			params.sourmash_db ? file(params.sourmash_db) : [],
+			params.sourmash_params ? params.sourmash_params : []
+		)
+	}
 
-	//MULTIQC(
-	//	params.multiqc_config ? file(params.multiqc_config) : [],
-	//	ch_multiqc_fastqc_raw,
-	//	Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
-	//	ch_multiqc_fastqc_trimmed,
-	//	Channel.topic('bowtie2_align_log').collect{it[1]}.ifEmpty{[]},
-	//	Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
-	//	Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
-	//	Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]},
-	//	ENCODE_CHIP.out.xcor_csv.collect{it[1]}.ifEmpty{[]}
-	//)
+	MULTIQC(
+		params.multiqc_config ? file(params.multiqc_config) : [],
+		ch_multiqc_fastqc_raw,
+		Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
+		ch_multiqc_fastqc_trimmed,
+		Channel.topic('bowtie2_align_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('spp_xcorr').collect{it[1]}.ifEmpty{[]},
+		Channel.topic('encode_reproducibility_json').collect{it[1]}.ifEmpty{[]}
+	)
 
-	//publish:
-	//MULTIQC.out >> "multiqc"
+	publish:
+	MULTIQC.out >> "multiqc"
 	//DEEPTOOLS_BAMCOVERAGE.out.bigwig >> "deeptools/bamCoverage"
 
 

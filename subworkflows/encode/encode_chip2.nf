@@ -53,6 +53,7 @@ workflow ENCODE_CHIP {
 		].join(" ")
 	)
 	ch_bam_aligned = BOWTIE2_ALIGN.out.bam
+	ch_bowtie2_log = BOWTIE2_ALIGN.out.log
 	INDEX_ALIGNED_BAM(ch_bam_aligned)
 	ch_bam_aligned_index   = INDEX_ALIGNED_BAM.out.bai
 
@@ -341,6 +342,7 @@ workflow ENCODE_CHIP {
 			}
 		.set{ch_reproducibility_input}
 		ENCODE_REPRODUCIBILITY(ch_reproducibility_input)
+		ENCODE_REPRODUCIBILITY.out.stats_json.view()
 
 
 
@@ -371,6 +373,7 @@ workflow ENCODE_CHIP {
 	emit:
 	bam_aligned        = ch_bam_aligned
 	bam_aligned_index  = ch_bam_aligned_index
+	bowtie2_log        = ch_bowtie2_log
 	bam_filtered       = ch_bam_filtered
 	bam_filtered_index = ch_bam_filtered_index
 	processed_tagalign = ch_processed_tagalign
