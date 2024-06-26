@@ -1,5 +1,6 @@
 process MULTIQC {
     tag "multiqc_report"
+    cache false
 
     conda "${moduleDir}/environment.yml"
     container "community.wave.seqera.io/library/multiqc:1.22.1--4886de6095538010"
@@ -15,6 +16,7 @@ process MULTIQC {
     path "data/sourmash/gather/*"
     path "data/spp_xcor/*"
     path "data/encode_reproducibility_stats/idr/*"
+    path "data/encode_reproducibility_stats/overlap/*"
 
     output:
     path "multiqc_report.html", optional: false, emit: html
@@ -25,6 +27,5 @@ process MULTIQC {
     def args = task.ext.args ?: ""
     """
     run_multiqc.py
-    
     """
 }

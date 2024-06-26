@@ -12,6 +12,7 @@ include { MACS2_CALLPEAK         } from '../../modules/encode/macs2/callpeak'
 include { MACS2_BDGCMP           } from '../../modules/encode/macs2/bdgcmp'
 include { FILTER_PEAKS           } from "../../modules/encode/filter_peaks/main"
 include { IDR_PEAKS              } from '../../modules/encode/idr/main'
+include { OVERLAP_PEAKS          } from '../../modules/encode/overlap/main'
 include { ENCODE_REPRODUCIBILITY } from '../../modules/encode/reproducibility/main'
 include { SAMTOOLS_INDEX as INDEX_ALIGNED_BAM } from "../../modules/local/samtools/index/main"
 include { SAMTOOLS_INDEX as INDEX_FILT_BAM    } from "../../modules/local/samtools/index/main"
@@ -294,13 +295,19 @@ workflow ENCODE_CHIP {
 			.mix(ch_peak_pooled_v_sample)
 			.set{ch_peak_combos}
 		
-		// TASK idr
-
+		// TASK reproducibility
+		ch_reproducibility_peaks = Channel.empty()
 		ch_peak_combos
 			.map{meta, peak1, peak2, peak3 ->
 				[meta + [mode: "idr"], peak1, peak2, peak3]
 			}
 			.set{ch_idr_input}
+		ch_peak_combos
+			.map{meta, peak1, peak2, peak3 ->
+				[meta + [mode: "overlap"], peak1, peak2, peak3]
+			}
+			.set{ch_overlap_input}
+		// SUBTASK idr
 
 		IDR_PEAKS(
 			ch_idr_input,
@@ -314,21 +321,19 @@ workflow ENCODE_CHIP {
 				[new_meta, peak]
 			}
 			.set {ch_idr_peaks}
-
-		ch_idr_peaks
-			.map{meta,peaks -> [meta.subMap("group","mode","peak_comparison_group"), peaks]}
-			.groupTuple(by: 0)
-			.branch{meta, peak ->
-				sample: meta.peak_comparison_group == "sample"
-					return [meta.subMap("group","mode"), peak]
-				nt:    meta.peak_comparison_group == "nt"
-					return [meta.subMap("group","mode"), peak]
-				np:    meta.peak_comparison_group == "np"
-					return [meta.subMap("group","mode"), peak]
+		ch_reproducibility_peaks = ch_reproducibility_peaks.mix(ch_idr_peaks)
+		
+		OVERLAP_PEAKS(ch_overlap_input)
+		OVERLAP_PEAKS.out.narrowPeak
+			.map{meta, peak ->
+				def new_meta = meta.clone()
+				new_meta.n_peaks = peak.countLines()
+				[new_meta, peak]
 			}
-			.set{ch_idr_peaks_branched}
+			.set {ch_overlap_peaks}
+		ch_reproducibility_peaks = ch_reproducibility_peaks.mix(ch_overlap_peaks)
 
-		ch_idr_peaks
+		ch_reproducibility_peaks
 			.map{meta,peaks ->
 				def new_meta = meta.subMap("group","mode")
 				[new_meta, [meta.peak_comparison_group, peaks]]
@@ -342,16 +347,6 @@ workflow ENCODE_CHIP {
 			}
 		.set{ch_reproducibility_input}
 		ENCODE_REPRODUCIBILITY(ch_reproducibility_input)
-		ENCODE_REPRODUCIBILITY.out.stats_json.view()
-
-
-
-		// TASK overlap
-		ch_peak_combos
-			.map{meta, peak1, peak2, peak3 ->
-				[meta + [mode: "overlap"], peak1, peak2, peak3]
-			}
-			.set{ch_overlap_input}
 
 
 	publish:

@@ -74,6 +74,13 @@ workflow CHIPSEQ {
 		)
 	}
 
+	Channel.topic('encode_reproducibility_json')
+		.branch{meta, peak ->
+			idr: meta.mode == "idr"
+			overlap: meta.mode == "overlap"
+		}
+		.set{ch_reproducibility_peaks_branched}
+
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],
 		ch_multiqc_fastqc_raw,
@@ -83,8 +90,9 @@ workflow CHIPSEQ {
 		Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
 		Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]},
-		Channel.topic('spp_xcorr').collect{it[1]}.ifEmpty{[]},
-		Channel.topic('encode_reproducibility_json').collect{it[1]}.ifEmpty{[]}
+		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
+		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
+		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]}
 	)
 
 	publish:
