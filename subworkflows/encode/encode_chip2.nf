@@ -1,19 +1,20 @@
 
-include { BOWTIE2_ALIGN         } from '../../modules/local/bowtie2/align/main'
-include { BAM_TO_TA             } from "../../modules/encode/bam_to_ta/main"
-include { CREATE_PSEUDOREPS     } from "../../modules/encode/create_pseudoreplicates/main"
-include { RUN_SPP               } from "../../modules/local/phantompeakqualtools/run_spp/main"
-include { EXTRACT_XCOR          } from "../../modules/local/phantompeakqualtools/extract_xcor/main"
-include { CAT_FILES             } from "../../modules/local/cat_files/main"
-include { RM_LOWQ_READS         } from '../../modules/encode/rm_lowq_reads/main'
-include { PICARD_MARKDUPLICATES } from '../../modules/local/picard/markDuplicates/main'
-include { RM_DUPLICATES         } from '../../modules/encode/rm_dup/main'
+include { BOWTIE2_ALIGN          } from '../../modules/local/bowtie2/align/main'
+include { BAM_TO_TA              } from "../../modules/encode/bam_to_ta/main"
+include { CREATE_PSEUDOREPS      } from "../../modules/encode/create_pseudoreplicates/main"
+include { RUN_SPP                } from "../../modules/local/phantompeakqualtools/run_spp/main"
+include { EXTRACT_XCOR           } from "../../modules/local/phantompeakqualtools/extract_xcor/main"
+include { CAT_FILES              } from "../../modules/local/cat_files/main"
+include { RM_LOWQ_READS          } from '../../modules/encode/rm_lowq_reads/main'
+include { PICARD_MARKDUPLICATES  } from '../../modules/local/picard/markDuplicates/main'
+include { RM_DUPLICATES          } from '../../modules/encode/rm_dup/main'
+include { MACS2_CALLPEAK         } from '../../modules/encode/macs2/callpeak'
+include { MACS2_BDGCMP           } from '../../modules/encode/macs2/bdgcmp'
+include { FILTER_PEAKS           } from "../../modules/encode/filter_peaks/main"
+include { IDR_PEAKS              } from '../../modules/encode/idr/main'
+include { ENCODE_REPRODUCIBILITY } from '../../modules/encode/reproducibility/main'
 include { SAMTOOLS_INDEX as INDEX_ALIGNED_BAM } from "../../modules/local/samtools/index/main"
 include { SAMTOOLS_INDEX as INDEX_FILT_BAM    } from "../../modules/local/samtools/index/main"
-include { MACS2_CALLPEAK        } from '../../modules/encode/macs2/callpeak'
-include { MACS2_BDGCMP          } from '../../modules/encode/macs2/bdgcmp'
-include { FILTER_PEAKS          } from "../../modules/encode/filter_peaks/main"
-include { IDR_PEAKS             } from '../../modules/encode/idr/main'
 
 def subset_peak_meta(peak_channel, meta_keys){
 	peak_channel.map{meta, peak -> [meta.subMap(meta_keys), peak]}
@@ -314,43 +315,35 @@ workflow ENCODE_CHIP {
 			.set {ch_idr_peaks}
 
 		ch_idr_peaks
+			.map{meta,peaks -> [meta.subMap("group","mode","peak_comparison_group"), peaks]}
+			.groupTuple(by: 0)
 			.branch{meta, peak ->
 				sample: meta.peak_comparison_group == "sample"
+					return [meta.subMap("group","mode"), peak]
 				nt:    meta.peak_comparison_group == "nt"
+					return [meta.subMap("group","mode"), peak]
 				np:    meta.peak_comparison_group == "np"
+					return [meta.subMap("group","mode"), peak]
 			}
 			.set{ch_idr_peaks_branched}
 
-		ch_idr_peaks_branched.nt
-			.map{meta,peak ->
-				[meta.group, [meta, peak] ]
+		ch_idr_peaks
+			.map{meta,peaks ->
+				def new_meta = meta.subMap("group","mode")
+				[new_meta, [meta.peak_comparison_group, peaks]]
 			}
-			.groupTuple(by:0)
+			.groupTuple(by: 0)
 			.map{meta, peaks ->
-				def max_peaks = peaks.collect{it[0].n_peaks}.max()
-				def nt_set = peaks.find{it -> it[0].n_peaks == max_peaks}
-				[nt_set[0].group, nt_set[0], nt_set[1]]
+				def nt_peaks = peaks.findAll{it[0] == "nt"}.collect{it[1]}
+				def np_peaks = peaks.findAll{it[0] == "np"}.collect{it[1]}
+				def sample_peaks = peaks.findAll{it[0] == "sample"}.collect{it[1]}
+				[meta, nt_peaks, np_peaks, sample_peaks]
 			}
-			.join(ch_idr_peaks_branched.np, by:0)
-			.view()
+		.set{ch_reproducibility_input}
+		ENCODE_REPRODUCIBILITY(ch_reproducibility_input)
 
-		
-		ch_idr_peaks_branched.sample
-			.map{meta, peak ->
-				[[group: meta.group], [meta.id, meta.n_peaks]]
-			}
-			.groupTuple(by:0)
-			.map{meta, peaks ->
-				def peak_numbers = peaks.collect{it[1]}
-				def peak_max = peak_numbers.max()
-				def peak_min = peak_numbers.min()
-				def self_consistency = 0
-				if(peak_min > 0){
-					self_consistency = (peak_max / peak_min)
-				}
-				[meta, [self_consistency_ratio: self_consistency] ]
 
-			}
+
 		// TASK overlap
 		ch_peak_combos
 			.map{meta, peak1, peak2, peak3 ->
@@ -360,18 +353,19 @@ workflow ENCODE_CHIP {
 
 
 	publish:
-	ch_bam_aligned         >> "encode/alignments/raw"
-	ch_bam_aligned_index   >> "encode/alignments/raw"
-	ch_bam_filtered        >> "encode/alignments/filtered"
-	ch_bam_filtered_index  >> "encode/alignments/filtered"
-	ch_processed_tagalign  >> "encode/tagAlign"
-	ch_narrowPeak		   >> "encode/macs2/raw"
-	ch_peaks_filtered	   >> "encode/macs2/filtered"
-	ch_idr_peaks		   >> "encode/macs2/idr"
-	ch_macs2_fc_bigwig     >> "encode/macs2/signal"
-	ch_macs2_pval_bigwig   >> "encode/macs2/signal"
-	ch_spp                 >> "encode/qc/spp"     
-	ch_xcor_csv            >> "encode/qc/spp"
+	ch_bam_aligned             >> "encode/alignments/raw"
+	ch_bam_aligned_index       >> "encode/alignments/raw"
+	ch_bam_filtered            >> "encode/alignments/filtered"
+	ch_bam_filtered_index      >> "encode/alignments/filtered"
+	ch_processed_tagalign      >> "encode/tagAlign"
+	ch_narrowPeak		       >> "encode/macs2/raw"
+	ch_peaks_filtered	       >> "encode/macs2/filtered"
+	ch_idr_peaks		       >> "encode/macs2/idr"
+	ch_macs2_fc_bigwig         >> "encode/macs2/signal"
+	ch_macs2_pval_bigwig       >> "encode/macs2/signal"
+	ch_spp                     >> "encode/qc/spp"     
+	ch_xcor_csv                >> "encode/qc/spp"
+	ENCODE_REPRODUCIBILITY.out >> "encode/reproducibility"
 
 
 	emit:
