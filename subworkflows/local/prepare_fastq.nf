@@ -7,8 +7,10 @@ include { FASTP_FASTP                     } from '../../modules/local/fastp/fast
 
 workflow PREPARE_FASTQ {
 	take:
-	ch_fastq // [ [meta], fastq1, fastq2 ]
-	read_length_reads // int or []
+	ch_fastq              // [ [meta], fastq1, fastq2 ]
+	read_length_reads     // int or []
+	fastp_extra_args      // string
+	skip_adapter_trimming // boolean
 
 	main:
 
@@ -45,34 +47,47 @@ workflow PREPARE_FASTQ {
 	
 	FASTQC_RAW(ch_fastq_concat)
 	
-	// TODO: add trimming
-	FASTP_FASTP(
-		ch_fastq_concat,
-		[]
-	)
-	FASTP_FASTP.out.fastq
-		.map{meta, fastq ->
-			if(meta.single_end) {
-				[meta, fastq, []]
-			} else {
-				[meta, fastq[0], fastq[1]]
+	if(skip_adapter_trimming) {
+		ch_fastq_trimmed      = ch_fastq_concat
+		ch_fastp_json         = Channel.empty()
+		ch_fastp_html         = Channel.empty()
+		ch_fastqc_trimmed     = Channel.empty()
+		ch_fastqc_trimmed_zip = Channel.empty()
+	} else {
+		FASTP_FASTP(
+			ch_fastq_concat,
+			fastp_extra_args ?: []
+		)
+		ch_fastp_json = FASTP_FASTP.out.json
+		ch_fastp_html = FASTP_FASTP.out.html
+		FASTP_FASTP.out.fastq
+			.map{meta, fastq ->
+				if(meta.single_end) {
+					[meta, fastq, []]
+				} else {
+					[meta, fastq[0], fastq[1]]
+				}
 			}
-		}
-		.set {ch_fastq_trimmed}
+			.set {ch_fastq_trimmed}
+		FASTQC_TRIMMED(ch_fastq_trimmed)
+		ch_fastqc_trimmed     = FASTQC_TRIMMED.out
+		ch_fastqc_trimmed_zip = FASTQC_TRIMMED.out.zip
+	}
+	
 
-	FASTQC_TRIMMED(ch_fastq_trimmed)
-	ch_fastq_trimmed = Channel.empty()
 
 	publish:
 	FASTQC_RAW.out       >> "fastqc/raw"
-	FASTQC_TRIMMED.out   >> "fastqc/trimmed"
-	FASTP_FASTP.out.json >> "fastp"
-	FASTP_FASTP.out.html >> "fastp"
+	ch_fastqc_trimmed    >> "fastqc/trimmed"
+	ch_fastp_json        >> "fastp"
+	ch_fastp_html        >> "fastp"
 
 	emit:
 	fastq              = ch_fastq_concat
 	fastq_trimmed      = ch_fastq_trimmed
 	fastqc_raw_zip     = FASTQC_RAW.out.zip
-	fastqc_trimmed_zip = FASTQC_TRIMMED.out.zip
+	fastqc_trimmed_zip = ch_fastqc_trimmed_zip
+	fastp_json         = ch_fastp_json
+	fastp_html         = ch_fastp_html
 
 }

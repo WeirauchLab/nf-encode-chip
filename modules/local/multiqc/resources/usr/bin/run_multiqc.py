@@ -2,6 +2,8 @@
 import glob
 import json
 import multiqc
+import multiqc.core
+import multiqc.multiqc
 from multiqc.plots import table
 from multiqc.plots import linegraph
 import csv

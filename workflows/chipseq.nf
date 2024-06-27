@@ -1,7 +1,7 @@
 
 include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
-include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip2"
+include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
 include { SOURMASH_CLASSIFIER } from "../subworkflows/local/sourmash_classifier"
 include { DEEPTOOLS_BAMCOVERAGE } from "../modules/local/deeptools/bamCoverage/main"
 
@@ -21,10 +21,7 @@ workflow CHIPSEQ {
 		params.fasta,
 		params.chrom_sizes,
 		params.gensz,
-		params.mito_fasta,
-		params.mito_chr_name,
 		params.bowtie2_index,
-		params.bowtie2_mito_index,
 		params.blacklist_peaks
 	)
 
@@ -35,7 +32,9 @@ workflow CHIPSEQ {
 	
 	PREPARE_FASTQ(
 		ch_input,
-		params.read_length_reads ? params.read_length_reads : []
+		params.read_length_reads ? params.read_length_reads : [],
+		params.fastp_extra_args,
+		params.skip_adapter_trimming
 	)
 	ch_multiqc_fastqc_raw     = PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]}
 	ch_multiqc_fastqc_trimmed = PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]}
@@ -47,9 +46,8 @@ workflow CHIPSEQ {
 		PREPARE_GENOME.out.genome_fai,
 		PREPARE_GENOME.out.gensz,
 		PREPARE_GENOME.out.bowtie2_index,
-		PREPARE_GENOME.out.bowtie2_mito_index,
 		params.multimapping ? params.multimapping : [],
-		params.local_mode,
+		params.local_mode ?: false,
 		params.mapq_threshold ? params.mapq_threshold : [],
 		params.chr_filter ? params.chr_filter : [],
 		params.pseudorep_seed ? params.pseudorep_seed : 0,
