@@ -1,17 +1,71 @@
+title: "ChIP-seq Analysis Report"
+intro_text: "This pipeline is based off the steps in ENCODE's ChIP-seq pipeline (v2.0.0). Minor modifications have been made."
+
+report_header_info:
+  - Contact E-mail: "NA"
+  - Application Type: "ChIP-seq"
+  - Project Type: "NA"
+
 show_analysis_paths: False
 show_analysis_time: False
+
+show_hide_buttons:
+  - Replicates
+  - Pseudoreplicates
+  - Pooled Samples
+show_hide_mode:
+  - hide
+  - show
+  - show
+show_hide_patterns:
+  - ["_sample","_pr1","pr2"]
+  - ["_pr1","pr2"]
+  - ["_sample"]
+
+table_columns_placement:
+  FastQC (raw):
+    total_sequences: 1
+
+table_columns_visible:
+  fastp:
+    pct_duplication: False
+  FastQC (raw): False
+  FastQC (trimmed): False
+
+report_section_order:
+  fastp:
+    order: 1000
+  bowtie2:
+    order: 990
+  picard:
+    order: 980
+  spp_xcorr:
+    order: 970
+  deepTools:
+    order: 960
+  encode_reproducibility:
+    order: 950
+  sourmash:
+    order: 890
+  fastqc_raw:
+    order: 10
+  fastqc_trimmed:
+    before: fastqc_raw
 
 module_order:
   - fastqc:
       name: "FastQC (raw)"
       info: "This section of the report shows FastQC results before adapter trimming."
+      anchor: "fastqc_raw"
       path_filters:
         - "data/fastqc/raw/*.zip"
   - fastqc:
       name: "FastQC (trimmed)"
       info: "This section of the report shows FastQC results after adapter trimming."
+      anchor: "fastqc_trimmed"
       path_filters:
         - "data/fastqc/trimmed/*.zip"
+
 
 extra_fn_clean_exts:
   - "_matches"

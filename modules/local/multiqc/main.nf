@@ -17,6 +17,8 @@ process MULTIQC {
     path "data/spp_xcor/*"
     path "data/encode_reproducibility_stats/idr/*"
     path "data/encode_reproducibility_stats/overlap/*"
+    path "data/deeptools/plotFingerprint/qc_metrics/*"
+    path "data/deeptools/plotFingerprint/raw_counts/*"
 
     output:
     path "multiqc_report.html", optional: false, emit: html
@@ -26,6 +28,6 @@ process MULTIQC {
     script:
     def args = task.ext.args ?: ""
     """
-    run_multiqc.py
+    run_multiqc.py --config ${multiqc_config}
     """
 }

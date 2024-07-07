@@ -11,6 +11,7 @@ workflow PREPARE_FASTQ {
 	read_length_reads     // int or []
 	fastp_extra_args      // string
 	skip_adapter_trimming // boolean
+	save_trimmed_fastq	  // boolean
 
 	main:
 
@@ -33,7 +34,7 @@ workflow PREPARE_FASTQ {
 		.join(CAT_FASTQ.out.fastq2, by: 0,remainder: true)
 		.mix(ch_fastq_branched.single)
 		.set {ch_fastq_concat}
-	
+
 	GAWK_READLENGTHS(
 		ch_fastq_concat.map{meta, fq1, fq2 -> [meta, fq1]},
 		read_length_reads
@@ -48,11 +49,11 @@ workflow PREPARE_FASTQ {
 	FASTQC_RAW(ch_fastq_concat)
 	
 	if(skip_adapter_trimming) {
-		ch_fastq_trimmed      = ch_fastq_concat
 		ch_fastp_json         = Channel.empty()
 		ch_fastp_html         = Channel.empty()
 		ch_fastqc_trimmed     = Channel.empty()
 		ch_fastqc_trimmed_zip = Channel.empty()
+		ch_fastq_output	      = ch_fastq_concat
 	} else {
 		FASTP_FASTP(
 			ch_fastq_concat,
@@ -60,6 +61,7 @@ workflow PREPARE_FASTQ {
 		)
 		ch_fastp_json = FASTP_FASTP.out.json
 		ch_fastp_html = FASTP_FASTP.out.html
+
 		FASTP_FASTP.out.fastq
 			.map{meta, fastq ->
 				if(meta.single_end) {
@@ -68,8 +70,8 @@ workflow PREPARE_FASTQ {
 					[meta, fastq[0], fastq[1]]
 				}
 			}
-			.set {ch_fastq_trimmed}
-		FASTQC_TRIMMED(ch_fastq_trimmed)
+			.set {ch_fastq_output}
+		FASTQC_TRIMMED(ch_fastq_output)
 		ch_fastqc_trimmed     = FASTQC_TRIMMED.out
 		ch_fastqc_trimmed_zip = FASTQC_TRIMMED.out.zip
 	}
@@ -81,10 +83,10 @@ workflow PREPARE_FASTQ {
 	ch_fastqc_trimmed    >> "fastqc/trimmed"
 	ch_fastp_json        >> "fastp"
 	ch_fastp_html        >> "fastp"
+	ch_fastq_output      >> (save_trimmed_fastq ? "fastq/trimmed" : null)
 
 	emit:
-	fastq              = ch_fastq_concat
-	fastq_trimmed      = ch_fastq_trimmed
+	fastq              = ch_fastq_output
 	fastqc_raw_zip     = FASTQC_RAW.out.zip
 	fastqc_trimmed_zip = ch_fastqc_trimmed_zip
 	fastp_json         = ch_fastp_json

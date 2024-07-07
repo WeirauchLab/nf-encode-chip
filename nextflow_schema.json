@@ -40,7 +40,10 @@
                     "fa_icon": "fas fa-folder-open"
                 },
                 "gensz": {
-                    "type": "integer",
+                    "type": [
+                        "integer",
+                        "string"
+                    ],
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure."
                 },
                 "mito_fasta": {
@@ -54,6 +57,12 @@
                     "type": "string",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
+                },
+                "pseudorep_seed": {
+                    "type": "integer",
+                    "default": 42,
+                    "description": "Pseudoreplication seed.",
+                    "help_text": "Pseudoreplication seed."
                 }
             }
         },

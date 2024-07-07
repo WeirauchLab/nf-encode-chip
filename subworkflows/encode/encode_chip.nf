@@ -16,6 +16,7 @@ include { OVERLAP_PEAKS          } from '../../modules/encode/overlap/main'
 include { ENCODE_REPRODUCIBILITY } from '../../modules/encode/reproducibility/main'
 include { SAMTOOLS_INDEX as INDEX_ALIGNED_BAM } from "../../modules/local/samtools/index/main"
 include { SAMTOOLS_INDEX as INDEX_FILT_BAM    } from "../../modules/local/samtools/index/main"
+include { DEEPTOOLS_PLOTFINGERPRINT } from "../../modules/local/deeptools/plotFingerprint/main"
 
 def subset_peak_meta(peak_channel, meta_keys){
 	peak_channel.map{meta, peak -> [meta.subMap(meta_keys), peak]}
@@ -46,11 +47,7 @@ workflow ENCODE_CHIP {
 	BOWTIE2_ALIGN(
 		ch_fastq,
 		ch_fasta,
-		ch_bowtie2_index,
-		[
-			multimapping ? "--mm ${multimapping}" : "",
-			local_mode ? "--local" : ""
-		].join(" ")
+		ch_bowtie2_index
 	)
 	ch_bam_aligned = BOWTIE2_ALIGN.out.bam
 	ch_bowtie2_log = BOWTIE2_ALIGN.out.log
@@ -83,6 +80,15 @@ workflow ENCODE_CHIP {
 		ch_bam_filtered
 	)
 	ch_bam_filtered_index = INDEX_FILT_BAM.out.bai
+
+	// Calculate JSD plot
+	ch_jsd_qc_metrics = Channel.empty()
+	ch_jsd_counts     = Channel.empty()
+	DEEPTOOLS_PLOTFINGERPRINT(
+		ch_bam_filtered.join(ch_bam_filtered_index, by: 0)
+	)
+	ch_jsd_qc_metrics = DEEPTOOLS_PLOTFINGERPRINT.out.quality_metrics
+	ch_jsd_counts     = DEEPTOOLS_PLOTFINGERPRINT.out.raw_counts
 
 	// TASK bam2ta
 
@@ -188,7 +194,7 @@ workflow ENCODE_CHIP {
 		0,
 		[
 			"-f BED",
-			"-p 0.05",
+			"-p 0.01",
 			"--nomodel",
 			"--shift 0",
 			"--keep-dup all",
@@ -346,6 +352,7 @@ workflow ENCODE_CHIP {
 			}
 		.set{ch_reproducibility_input}
 		ENCODE_REPRODUCIBILITY(ch_reproducibility_input)
+		ch_reproducible_peaks = ENCODE_REPRODUCIBILITY.out.peaks
 
 
 	publish:
@@ -357,11 +364,13 @@ workflow ENCODE_CHIP {
 	ch_narrowPeak		       >> "encode/macs2/raw"
 	ch_peaks_filtered	       >> "encode/macs2/filtered"
 	ch_idr_peaks		       >> "encode/macs2/idr"
+	ch_overlap_peaks	       >> "encode/macs2/overlap"
 	ch_macs2_fc_bigwig         >> "encode/macs2/signal"
 	ch_macs2_pval_bigwig       >> "encode/macs2/signal"
 	ch_spp                     >> "encode/qc/spp"     
 	ch_xcor_csv                >> "encode/qc/spp"
 	ENCODE_REPRODUCIBILITY.out >> "encode/reproducibility"
+	ch_reproducible_peaks	   >> "encode/macs2/reproducibility"
 
 
 	emit:
@@ -375,5 +384,7 @@ workflow ENCODE_CHIP {
 	peaks_filtered     = ch_peaks_filtered
 	macs2_fc_bigwig    = ch_macs2_fc_bigwig
 	macs2_pval_bigwig  = ch_macs2_pval_bigwig
+	jsd_qc_metrics     = ch_jsd_qc_metrics
+	jsd_counts         = ch_jsd_counts
 
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import glob
 import json
 import multiqc
@@ -8,10 +9,17 @@ from multiqc.plots import table
 from multiqc.plots import linegraph
 import csv
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", type=str)
+args = parser.parse_args()
+
 spp_xcorr_pattern = "data/spp_xcor/*.csv"
 idr_rep_stats_pattern = "data/encode_reproducibility_stats/idr/*.json"
 overlap_rep_stats_pattern = "data/encode_reproducibility_stats/overlap/*.json"
 
+# Load MultiQC config
+if args.config:
+    multiqc.load_config("multiqc_config.yaml")
 # Parse known logs
 multiqc.parse_logs("data")
 

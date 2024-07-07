@@ -7,9 +7,11 @@ process ENCODE_REPRODUCIBILITY {
 	input:
 	tuple val(meta), path(nt_peaks), path(np_peaks), path(rep_peaks)
 	output:
-	tuple val(meta), path("*_peak_counts.csv"), optional: true, emit: peak_counts_csv
-	tuple val(meta), path("*_stats.csv")      , optional: true, emit: stats_csv
-	tuple val(meta), path("*_stats.json")     , optional: true, emit: stats_json, topic: encode_reproducibility_json
+	tuple val(meta), path("*_peak_counts.csv")         , optional: true, emit: peak_counts_csv
+	tuple val(meta), path("*_stats.csv")               , optional: true, emit: stats_csv
+	tuple val(meta), path("*_stats.json")              , optional: true, emit: stats_json, topic: encode_reproducibility_json
+	tuple val(meta), path("*.narrowPeak")              , optional: true, emit: peaks
+
 
 	script:
 	def nt_arg = nt_peaks ? "--Nt $nt_peaks" : ""

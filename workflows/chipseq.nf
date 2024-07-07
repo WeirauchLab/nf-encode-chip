@@ -34,7 +34,8 @@ workflow CHIPSEQ {
 		ch_input,
 		params.read_length_reads ? params.read_length_reads : [],
 		params.fastp_extra_args,
-		params.skip_adapter_trimming
+		params.skip_adapter_trimming,
+		params.save_trimmed_fastq
 	)
 	ch_multiqc_fastqc_raw     = PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]}
 	ch_multiqc_fastqc_trimmed = PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]}
@@ -65,6 +66,7 @@ workflow CHIPSEQ {
 
 
 	if (params.enable_sourmash) {
+
 		SOURMASH_CLASSIFIER(
 			PREPARE_FASTQ.out.fastq,
 			params.sourmash_db ? file(params.sourmash_db) : [],
@@ -90,7 +92,9 @@ workflow CHIPSEQ {
 		Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
-		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]}
+		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.jsd_qc_metrics.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.jsd_counts.collect{it[1]}.ifEmpty{[]}
 	)
 
 	publish:
