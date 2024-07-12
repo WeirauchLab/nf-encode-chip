@@ -71,16 +71,6 @@ workflow ENCODE_CHIP {
 		ch_mito_chr_name
 	)
 
-
-	// Calculate JSD plot
-	ch_jsd_qc_metrics = Channel.empty()
-	ch_jsd_counts     = Channel.empty()
-	DEEPTOOLS_PLOTFINGERPRINT(
-		ch_filtered_bam_bai
-	)
-	ch_jsd_qc_metrics = DEEPTOOLS_PLOTFINGERPRINT.out.quality_metrics
-	ch_jsd_counts     = DEEPTOOLS_PLOTFINGERPRINT.out.raw_counts
-
 	TASK_MACS2(
 		TASK_XCORR.out.tagAlign,
 		ch_fai,
@@ -127,7 +117,5 @@ workflow ENCODE_CHIP {
 	overlap_peaks              = TASK_REPRODUCIBILITY.out.overlap_peaks
 	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
 	overlap_reproducible_peaks = TASK_REPRODUCIBILITY.out.overlap_reproducible_peaks
-	jsd_qc_metrics     = ch_jsd_qc_metrics
-	jsd_counts         = ch_jsd_counts
 
 }

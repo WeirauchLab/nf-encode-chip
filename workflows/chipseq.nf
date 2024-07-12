@@ -3,7 +3,7 @@ include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
 include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
-include { DEEPTOOLS_BAMCOVERAGE } from "../modules/local/deeptools/bamCoverage/main"
+include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
 include { HOMER_FINDMOTIFSGENOME } from "../modules/local/homer/findmotifsgenome/main"
 include { HOMER_POSTPROC_FINDMOTIFSGENOME } from "../modules/local/homer/postproc_findmotifsgenome/main" 
 
@@ -64,15 +64,18 @@ workflow CHIPSEQ {
 		params.skip_overlap ?: false
 	)
 
-	DEEPTOOLS_BAMCOVERAGE(
-		ENCODE_CHIP.out.bam_filtered.join(ENCODE_CHIP.out.bam_filtered_index, by: 0),
-		params.deeptools_bamcoverage_args ?: []
+	DEEPTOOLS(
+		ENCODE_CHIP.out.bam_filtered,
+		ENCODE_CHIP.out.bam_filtered_index,
+		params.skip_bamcoverage
 	)
 
 	METAGENOMICS(
 		PREPARE_FASTQ.out.fastq,
 		params.sourmash_db ? file(params.sourmash_db) : [],
-		params.skip_sourmash
+		params.skip_sourmash,
+		params.kraken2_db ? file(params.kraken2_db) : [],
+		params.skip_kraken2
 	)
 
 	ch_homer_peak_inputs = Channel.empty()
@@ -106,12 +109,12 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
-		METAGENOMICS.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
+		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.jsd_qc_metrics.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.jsd_counts.collect{it[1]}.ifEmpty{[]},
+		DEEPTOOLS.out.fingerprint_metrics.collect{it[1]}.ifEmpty{[]},
+		DEEPTOOLS.out.fingerprint_counts.collect{it[1]}.ifEmpty{[]},
 		ch_homer_findmotifsgenome_results.collect{it[1]}.ifEmpty{[]}
 	)
 

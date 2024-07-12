@@ -9,12 +9,12 @@ process DEEPTOOLS_BAMCOVERAGE {
 
 	input:
 	tuple val(meta), path(bam), path(bai)
-	val args
 
 	output:
 	tuple val(meta), path("*.bw"), optional: true, emit: bigwig
 
 	script:
+	def args = task.ext.args ?: ""
 	def prefix = task.ext.prefix ?: "${meta.id}_normalized"
 	"""
 	bamCoverage \\

@@ -5,6 +5,8 @@ workflow METAGENOMICS {
 	ch_fastq       // channel: [ val(meta), path(fastq1), path(fastq2) ]
 	sourmash_db    // file or []
 	skip_sourmash  // boolean
+	kraken2_db     // file or []
+	skip_kraken2   // boolean
 
 	main:
 
@@ -21,6 +23,19 @@ workflow METAGENOMICS {
 		)
 		ch_sourmash_sketch     = SOURMASH_CLASSIFIER.out.sketch
 		ch_sourmash_gather_csv = SOURMASH_CLASSIFIER.out.csv
+	}
+
+	//----------------------------------------------------------//
+	// kraken2
+	//----------------------------------------------------------//
+
+	ch_kraken2_report = Channel.empty()
+	if(!skip_kraken2 && kraken2_db){
+		KRAKEN2(
+			ch_fastq,
+			kraken2_db
+		)
+		ch_kraken2_report = KRAKEN2.out.report
 	}
 
 	emit:
