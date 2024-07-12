@@ -41,5 +41,6 @@ workflow METAGENOMICS {
 	emit:
 	sourmash_sketch     = ch_sourmash_sketch
 	sourmash_gather_csv = ch_sourmash_gather_csv
+	kraken2_report      = ch_kraken2_report
 
 }
