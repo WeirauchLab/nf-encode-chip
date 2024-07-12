@@ -110,6 +110,7 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
+		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},

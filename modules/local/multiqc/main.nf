@@ -14,6 +14,7 @@ process MULTIQC {
     path "data/picard_markduplicates/*"
     path "data/spp/*"
     path "data/sourmash/gather/*"
+    path "data/kraken2/*"
     path "data/spp_xcor/*"
     path "data/encode_reproducibility_stats/idr/*"
     path "data/encode_reproducibility_stats/overlap/*"

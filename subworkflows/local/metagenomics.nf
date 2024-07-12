@@ -1,4 +1,5 @@
 include { SOURMASH_CLASSIFIER } from "./sourmash_classifier"
+include { KRAKEN2_CLASSIFIER  } from "./kraken2_classifier"
 
 workflow METAGENOMICS {
 	take:
@@ -30,12 +31,12 @@ workflow METAGENOMICS {
 	//----------------------------------------------------------//
 
 	ch_kraken2_report = Channel.empty()
-	if(!skip_kraken2 && kraken2_db){
-		KRAKEN2(
+	if(!skip_kraken2){
+		KRAKEN2_CLASSIFIER(
 			ch_fastq,
 			kraken2_db
 		)
-		ch_kraken2_report = KRAKEN2.out.report
+		ch_kraken2_report = KRAKEN2_CLASSIFIER.out.report
 	}
 
 	emit:

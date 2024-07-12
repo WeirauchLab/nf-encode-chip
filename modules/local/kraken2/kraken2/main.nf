@@ -6,7 +6,7 @@ process KRAKEN2_KRAKEN2 {
 
 	input:
 	tuple val(meta), path(fastq1), path(fastq2)
-	tuple val(meta2), path(db, stageAs: 'kraken2_db')
+	tuple val(meta2), path(db)
 
 	output:
 	tuple val(meta), path("*.kraken2.report"), optional: true, emit: report
@@ -19,7 +19,7 @@ process KRAKEN2_KRAKEN2 {
 		--db ${db} \\
 		--threads ${task.cpus} \\
 		--report ${prefix}.kraken2.report \\
-		${meta.single_end ? "--paired" : ""} \\
+		${!meta.single_end ? "--paired" : ""} \\
 		${args} \\
 		${fastq1} ${fastq2}
 	"""
