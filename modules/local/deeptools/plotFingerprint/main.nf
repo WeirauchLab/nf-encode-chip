@@ -1,5 +1,8 @@
 process DEEPTOOLS_PLOTFINGERPRINT {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/deeptools:3.5.5--0929777992a8c4c6"

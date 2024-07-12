@@ -2,8 +2,10 @@
 include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
-include { SOURMASH_CLASSIFIER } from "../subworkflows/local/sourmash_classifier"
+include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS_BAMCOVERAGE } from "../modules/local/deeptools/bamCoverage/main"
+include { HOMER_FINDMOTIFSGENOME } from "../modules/local/homer/findmotifsgenome/main"
+include { HOMER_POSTPROC_FINDMOTIFSGENOME } from "../modules/local/homer/postproc_findmotifsgenome/main" 
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
@@ -56,22 +58,37 @@ workflow CHIPSEQ {
 		params.idr_threshold_col ? params.idr_threshold_col : "p.value",
 		params.idr_threshold ? params.idr_threshold : 0.05,
 		params.mito_chr_name ?: [],
-		params.chip_mode ?: "tf"
+		params.chip_mode ?: "tf",
+		params.skip_peak_filtering ?: false,
+		params.skip_idr ?: false,
+		params.skip_overlap ?: false
 	)
 
-	//DEEPTOOLS_BAMCOVERAGE(
-	//	ENCODE_CHIP.out.dedup_bam.join(ENCODE_CHIP.out.dedup_bai, by: 0),
-	//	params.deeptools_bamcoverage_args ?: []
-	//)
+	DEEPTOOLS_BAMCOVERAGE(
+		ENCODE_CHIP.out.bam_filtered.join(ENCODE_CHIP.out.bam_filtered_index, by: 0),
+		params.deeptools_bamcoverage_args ?: []
+	)
 
+	METAGENOMICS(
+		PREPARE_FASTQ.out.fastq,
+		params.sourmash_db ? file(params.sourmash_db) : [],
+		params.skip_sourmash
+	)
 
-	if (params.enable_sourmash) {
+	ch_homer_peak_inputs = Channel.empty()
+	ch_homer_peak_inputs = ch_homer_peak_inputs
+		.mix(ENCODE_CHIP.out.idr_reproducible_peaks)
+		.mix(ENCODE_CHIP.out.overlap_reproducible_peaks)
 
-		SOURMASH_CLASSIFIER(
-			PREPARE_FASTQ.out.fastq,
-			params.sourmash_db ? file(params.sourmash_db) : [],
-			params.sourmash_params ? params.sourmash_params : []
+	ch_homer_findmotifsgenome_results = Channel.empty()
+	if(!params.skip_homer_findmotifsgenome) {
+		HOMER_FINDMOTIFSGENOME(
+			ch_homer_peak_inputs,
+			PREPARE_GENOME.out.genome_fasta,
+			params.homer_motif_lib ? file(params.homer_motif_lib) : []
 		)
+		HOMER_POSTPROC_FINDMOTIFSGENOME(HOMER_FINDMOTIFSGENOME.out.knownResults)
+		ch_homer_findmotifsgenome_results = HOMER_POSTPROC_FINDMOTIFSGENOME.out.tsv
 	}
 
 	Channel.topic('encode_reproducibility_json')
@@ -86,19 +103,22 @@ workflow CHIPSEQ {
 		ch_multiqc_fastqc_raw,
 		Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
 		ch_multiqc_fastqc_trimmed,
-		Channel.topic('bowtie2_align_log').collect{it[1]}.ifEmpty{[]},
-		Channel.topic('picard_markduplicates_log').collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
-		Channel.topic('sourmash_gather_csv').collect{it[1]}.ifEmpty{[]},
+		METAGENOMICS.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.jsd_qc_metrics.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.jsd_counts.collect{it[1]}.ifEmpty{[]}
+		ENCODE_CHIP.out.jsd_counts.collect{it[1]}.ifEmpty{[]},
+		ch_homer_findmotifsgenome_results.collect{it[1]}.ifEmpty{[]}
 	)
 
 	publish:
 	MULTIQC.out >> "multiqc"
+	HOMER_FINDMOTIFSGENOME.out >> "homer/findMotifsGenome/raw"
+	HOMER_POSTPROC_FINDMOTIFSGENOME.out >> "homer/findMotifsGenome/postproc"
 	//DEEPTOOLS_BAMCOVERAGE.out.bigwig >> "deeptools/bamCoverage"
 
 

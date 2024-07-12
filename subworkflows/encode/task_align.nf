@@ -1,0 +1,40 @@
+include { BOWTIE2_ALIGN          } from '../../modules/local/bowtie2/align/main'
+include { SAMTOOLS_INDEX         } from "../../modules/local/samtools/index/main"
+
+workflow TASK_ALIGN {
+	take:
+	ch_fastq // [ val(meta), path(fastq1), path(fastq2) or [] ]
+	ch_fasta // [ val(meta), path(fasta) ]
+	aligner // "bowtie2"
+	bowtie2_index // [ val(meta), path(index) ] OR []
+
+	main:
+	ch_bam = Channel.empty()
+	ch_bai = Channel.empty()
+	ch_bowtie2_log = Channel.empty()
+
+	if(aligner == "bowtie2") {
+		BOWTIE2_ALIGN(
+			ch_fastq,
+			ch_fasta,
+			bowtie2_index
+		)
+		ch_bam         = BOWTIE2_ALIGN.out.bam
+		ch_bowtie2_log = BOWTIE2_ALIGN.out.log
+	}
+
+	SAMTOOLS_INDEX(ch_bam)
+	ch_bai = SAMTOOLS_INDEX.out.bai
+
+	publish:
+	ch_bam         >> "encode/alignments/raw"
+	ch_bowtie2_log >> "encode/logs/bowtie2"
+
+	emit:
+	bam         = ch_bam
+	bai         = ch_bai
+	bowtie2_log = ch_bowtie2_log
+
+
+
+}

@@ -1,5 +1,8 @@
 process BAM_TO_TA {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools_samtools_gawk_gzip:211fa1eea1361c12"

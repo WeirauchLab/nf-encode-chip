@@ -1,5 +1,8 @@
 process FASTP_FASTP {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/fastp:0.23.4--4d9e23447c67e79e"
@@ -18,8 +21,12 @@ process FASTP_FASTP {
 	def args = task.ext.args ?: ""
 	if (meta.single_end){
 		"""
+		if [ "${fastq1}" != "${prefix}.fastq.gz" ]; then
+			mv ${fastq1} ${prefix}.fastq.gz
+		fi
+
 		fastp \\
-			--in1 ${fastq1} \\
+			--in1 ${prefix}.fastq.gz \\
 			--out1 ${prefix}.fastp.fastq.gz \\
 			--json ${prefix}.fastp.json \\
 			--html ${prefix}.fastp.html \\
@@ -28,11 +35,18 @@ process FASTP_FASTP {
 		"""
 	} else {
 		"""
+		if [ "${fastq1}" != "${prefix}_1.fastq.gz" ]; then
+			mv ${fastq1} ${prefix}_1.fastq.gz
+		fi
+		if [ "${fastq2}" != "${prefix}_2.fastq.gz" ]; then
+			mv ${fastq2} ${prefix}_2.fastq.gz
+		fi
+
 		fastp \\
-			--in1 ${fastq1} \\
-			--out1 ${prefix}_R1.fastp.fastq.gz \\
-			--in2 ${fastq2} \\
-			--out2 ${prefix}_R2.fastp.fastq.gz \\
+			--in1 ${prefix}_1.fastq.gz \\
+			--out1 ${prefix}_1.fastp.fastq.gz \\
+			--in2 ${prefix}_2.fastq.gz \\
+			--out2 ${prefix}_2.fastp.fastq.gz \\
 			--json ${prefix}.fastp.json \\
 			--html ${prefix}.fastp.html \\
 			--thread ${task.cpus} \\

@@ -1,5 +1,8 @@
 process EXTRACT_XCOR {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/r-argparse_r-tidyverse:9c26b9d2451d2c78"

@@ -1,5 +1,8 @@
 process MACS2_CALLPEAK {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools_macs2_ucsc-bedgraphtobigwig:831ad901e42b7721"
@@ -9,7 +12,6 @@ process MACS2_CALLPEAK {
 	tuple val(meta2), path(fai)
 	val gensz
 	val max_peaks
-	val macs2_args
 
 
 	output:
@@ -27,8 +29,7 @@ process MACS2_CALLPEAK {
 		${ctl_ta ? "-c ${ctl_ta}" : ""} \\
 		-n ${prefix} \\
 		-g ${gensz} \\
-		${meta.frag_len ? "--extsize ${meta.frag_len}" : ""} \\
-		${macs2_args}
+		${args}
 	
 	sort -k 8gr,8gr ${prefix}_peaks.narrowPeak \\
 		| awk 'BEGIN{OFS="\\t"} {\$4="PEAK_"NR; if (\$2<0) \$2=0; if (\$3<0) \$3=0; if (\$10==-1) \$10=\$2+int((\$3-\$2+1)/2.0); print \$0}' \\

@@ -19,6 +19,7 @@ process MULTIQC {
     path "data/encode_reproducibility_stats/overlap/*"
     path "data/deeptools/plotFingerprint/qc_metrics/*"
     path "data/deeptools/plotFingerprint/raw_counts/*"
+    path "data/homer/findMotifsGenome/*"
 
     output:
     path "multiqc_report.html", optional: false, emit: html

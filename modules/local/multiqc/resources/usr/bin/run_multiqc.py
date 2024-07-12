@@ -3,11 +3,12 @@ import argparse
 import glob
 import json
 import multiqc
-import multiqc.core
 import multiqc.multiqc
 from multiqc.plots import table
 from multiqc.plots import linegraph
+from multiqc import config
 import csv
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str)
@@ -16,6 +17,7 @@ args = parser.parse_args()
 spp_xcorr_pattern = "data/spp_xcor/*.csv"
 idr_rep_stats_pattern = "data/encode_reproducibility_stats/idr/*.json"
 overlap_rep_stats_pattern = "data/encode_reproducibility_stats/overlap/*.json"
+homer_findmotifsgenome_pattern = "data/homer/findMotifsGenome/*.tsv"
 
 # Load MultiQC config
 if args.config:
@@ -91,9 +93,12 @@ encode_reproducibility_module.add_section(
     plot=idr_rep_stats_plot,
     anchor="encode_reproducibility_stats_idr_section",
     description="""
-**Nt**                = Best no. of peaks passing IDR threshold by comparing true replicates\n
-**Np**                = Best no. of peaks passing IDR threshold by comparing pseudo replicates\n
-**Conservative**      = file containing the best peak number when comparing true replicate pairs\n
+**Nt**                = Best no. of peaks passing IDR threshold by comparing
+true replicates\n
+**Np**                = Best no. of peaks passing IDR threshold by comparing
+pseudoreplicates\n
+**Conservative**      = file containing the best peak number when comparing
+true replicate pairs\n
 **Optimal**           = peak file with the most peaks when comparing Nt and Np\n
 **Rescue Ratio**      = max(Nt, Np) / min(Nt, Np)\n
 **Consistency Ratio** = max(Peaks) / min(Peaks)
@@ -133,15 +138,52 @@ encode_reproducibility_module.add_section(
     plot=overlap_rep_stats_plot,
     anchor="encode_reproducibility_stats_overlap_section",
     description="""
-**Nt**                = Best no. of peaks passing IDR threshold by comparing true replicates\n
-**Np**                = Best no. of peaks passing IDR threshold by comparing pseudo replicates\n
-**Conservative**      = file containing the best peak number when comparing true replicate pairs\n
-**Optimal**           = peak file with the most peaks when comparing Nt and Np\n
+**Nt**                = Best no. of overlapping peaks when comparing true
+replicates against the pooled replicate\n
+**Np**                = Best no. of overlapping peaks when comparing
+pseudoreplicates against the pooled replicate\n
+**Conservative**      = file containing the best peak number when comparing
+true replicate pairs\n
+**Optimal**           = peak file with the most peaks when comparing
+Nt and Np\n
 **Rescue Ratio**      = max(Nt, Np) / min(Nt, Np)\n
 **Consistency Ratio** = max(Peaks) / min(Peaks)
 """,
 )
-
 multiqc.report.modules.append(encode_reproducibility_module)
 
+homer_findmotifsgenome_data = {}
+for res in glob.glob(homer_findmotifsgenome_pattern):
+    with open(res) as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            sample_id = row["id"]
+            del row["id"]
+            homer_findmotifsgenome_data[sample_id] = row
+            break
+
+homer_findmotifsgenome_plot = table.plot(
+    data=homer_findmotifsgenome_data,
+    pconfig={
+        "id": "homer_findmotifsgenome_table",
+        "title": "HOMER Known Motifs",
+    },
+)
+homer_findmotifsgenome_module = multiqc.BaseMultiqcModule(
+    name="HOMER findMotifsGenome",
+    anchor="homer_findmotifsgenome",
+    comment="Top motif results reported by HOMER.",
+)
+
+homer_findmotifsgenome_module.add_section(
+    name="Known Motifs",
+    plot=homer_findmotifsgenome_plot,
+    anchor="homer_findmotifsgenome_known",
+    description="""Top motif results reported by HOMER.
+    The table shows the top motif for each sample when
+    scanning known motifs.""",
+)
+multiqc.report.modules.append(homer_findmotifsgenome_module)
+
+# Write the report
 multiqc.write_report(filename="multiqc_report.html", force=True)

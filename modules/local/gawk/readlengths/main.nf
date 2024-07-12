@@ -1,5 +1,8 @@
 process GAWK_READLENGTHS {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/gawk:5.3.0--fee4ad759a5f7c5f"

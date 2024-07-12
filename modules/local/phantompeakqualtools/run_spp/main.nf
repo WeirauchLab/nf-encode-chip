@@ -1,5 +1,8 @@
 process RUN_SPP {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/phantompeakqualtools:1.2.2--f8026fe2526a5e18"

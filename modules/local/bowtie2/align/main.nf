@@ -1,5 +1,8 @@
 process BOWTIE2_ALIGN {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bowtie2_samtools:5ffb83f41ffa0c0e"

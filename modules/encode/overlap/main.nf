@@ -1,5 +1,8 @@
 process OVERLAP_PEAKS {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools:2.31.1--8fd0e3802b0dc02e"

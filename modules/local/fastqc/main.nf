@@ -1,5 +1,8 @@
 process FASTQC_FASTQC {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/fastqc:0.12.1--5cfd0f3cb6760c42"
@@ -16,18 +19,18 @@ process FASTQC_FASTQC {
 	def args = task.ext.args ?: ""
 	if (meta.single_end) {
 		"""
-		ln -s ${fastq1} ${prefix}_1.fastq.gz
+		mv ${fastq1} ${prefix}_1.fastq.gz
 		fastqc \\
 			--threads ${task.cpus} \\
-			${fastq1}
+			${prefix}_1.fastq.gz
 		"""
 	} else {
 		"""
-		ln -s ${fastq1} ${prefix}_1.fastq.gz
-		ln -s ${fastq2} ${prefix}_2.fastq.gz
+		mv ${fastq1} ${prefix}_1.fastq.gz
+		mv ${fastq2} ${prefix}_2.fastq.gz
 		fastqc \\
 			--threads ${task.cpus} \\
-			${fastq1} ${fastq2}
+			${prefix}_1.fastq.gz ${prefix}_2.fastq.gz
 		"""
 	}
 	

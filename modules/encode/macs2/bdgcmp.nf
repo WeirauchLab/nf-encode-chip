@@ -1,5 +1,8 @@
 process MACS2_BDGCMP {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	cpus   = {1 * task.attempt}
 	memory = {8.GB * 1}
