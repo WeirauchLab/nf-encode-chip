@@ -1,5 +1,6 @@
 include { BOWTIE2_ALIGN          } from '../../modules/local/bowtie2/align/main'
 include { SAMTOOLS_INDEX         } from "../../modules/local/samtools/index/main"
+include { SAMTOOLS_FLAGSTAT      } from "../../modules/local/samtools/flagstats/main"
 
 workflow TASK_ALIGN {
 	take:
@@ -26,15 +27,17 @@ workflow TASK_ALIGN {
 	SAMTOOLS_INDEX(ch_bam)
 	ch_bai = SAMTOOLS_INDEX.out.bai
 
+	SAMTOOLS_FLAGSTAT(ch_bam)
+
 	publish:
 	ch_bam         >> "encode/alignments/raw"
 	ch_bowtie2_log >> "encode/logs/bowtie2"
+	SAMTOOLS_FLAGSTAT.out.flagstat >> "encode/alignments/flagstats/aligned"
 
 	emit:
 	bam         = ch_bam
 	bai         = ch_bai
 	bowtie2_log = ch_bowtie2_log
-
-
+	flagstat    = SAMTOOLS_FLAGSTAT.out.flagstat
 
 }

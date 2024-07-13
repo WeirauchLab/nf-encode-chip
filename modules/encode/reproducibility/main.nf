@@ -14,6 +14,7 @@ process ENCODE_REPRODUCIBILITY {
 	tuple val(meta), path("*_stats.csv")               , optional: true, emit: stats_csv
 	tuple val(meta), path("*_stats.json")              , optional: true, emit: stats_json, topic: encode_reproducibility_json
 	tuple val(meta), path("*.narrowPeak")              , optional: true, emit: peaks
+	tuple val(task.process), val("python")          , eval("python --version | sed 's/Python //'")                                       , topic: versions
 
 
 	script:

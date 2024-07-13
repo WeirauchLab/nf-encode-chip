@@ -3,7 +3,7 @@ process MULTIQC {
     cache false
 
     conda "${moduleDir}/environment.yml"
-    container "community.wave.seqera.io/library/multiqc:1.22.1--4886de6095538010"
+    container "quay.io/biocontainers/multiqc:1.23--pyhdfd78af_0"
 
     input:
     path multiqc_config
@@ -11,6 +11,7 @@ process MULTIQC {
     path "data/fastp/*"
     path "data/fastqc/trimmed/*"
     path "data/bowtie2_align/*"
+    path "data/samtools_flagstat/filtered/*"
     path "data/picard_markduplicates/*"
     path "data/spp/*"
     path "data/sourmash/gather/*"
@@ -21,6 +22,7 @@ process MULTIQC {
     path "data/deeptools/plotFingerprint/qc_metrics/*"
     path "data/deeptools/plotFingerprint/raw_counts/*"
     path "data/homer/findMotifsGenome/*"
+    path "data/*"
 
     output:
     path "multiqc_report.html", optional: false, emit: html

@@ -15,6 +15,7 @@ process FASTP_FASTP {
 	tuple val(meta), path("*.fastp.fastq.gz"), optional: false, emit: fastq
 	tuple val(meta), path("*.json")          , optional: false, emit: json, topic: fastp_json
 	tuple val(meta), path("*.html")          , optional: false, emit: html, topic: fastp_html
+	tuple val(task.process), val("fastp") , eval("fastp --version 2>&1 | head -n 1 | sed 's/fastp //'") , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

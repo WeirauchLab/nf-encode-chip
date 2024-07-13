@@ -13,6 +13,7 @@ process FASTQC_FASTQC {
 	output:
 	tuple val(meta), path("*.html"), optional: true, emit: html
 	tuple val(meta), path("*.zip") , optional: true, emit: zip
+	tuple val(task.process), val("FastQC") , eval("fastqc --version | head -n 1 | sed 's/FastQC v//'") , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

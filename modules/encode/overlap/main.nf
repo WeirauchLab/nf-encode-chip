@@ -12,6 +12,7 @@ process OVERLAP_PEAKS {
 
 	output:
 	tuple val(meta), path("*.overlap.narrowPeak")  , optional: true, emit: narrowPeak
+	tuple val(task.process), val("bedtools")        , eval("bedtools --version | sed 's/bedtools v//'")                                  , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

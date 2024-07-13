@@ -103,6 +103,22 @@ true replicate pairs\n
 **Rescue Ratio**      = max(Nt, Np) / min(Nt, Np)\n
 **Consistency Ratio** = max(Peaks) / min(Peaks)
 """,
+    helptext="""Nt is established by comparing pairs of true replicates against
+    each other and transferring the results to the pooled peak set.
+    If you have 2 replicates, it would just be
+    - 'rep1 vs rep2'
+    if you have 3 or more, it would be:
+    - 'rep1 vs rep2'
+    - 'rep1 vs rep3'
+    - 'rep2 vs rep3'
+    and so on. The comparison the best number of peaks is then selected as Nt.
+    Np is established the same way, but it will only ever have 2 pseudoreps.
+    The rescue ratio is the ratio of these two peak sets and tries to represent
+    how well the pseudoreplicates can recapitulate the true replicates.
+    Consistency ratio estimates how consistent the peak sets are across the
+    replicates. If one replicate has a lot more peaks than the other, this will
+    ratio will increase, which could be indicative of a failed replicate.
+    """,
 )
 
 overlap_rep_stats_data = {}

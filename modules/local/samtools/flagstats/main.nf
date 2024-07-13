@@ -1,4 +1,4 @@
-process SAMTOOLS_FAIDX {
+process SAMTOOLS_FLAGSTAT {
 	tag "${meta.id}"
 	cpus   = {1 * task.attempt}
 	memory = {16.GB * task.attempt}
@@ -8,16 +8,19 @@ process SAMTOOLS_FAIDX {
 	//container ""
 
 	input:
-	tuple val(meta), path(fasta)
+	tuple val(meta), path(bam)
 
 	output:
-	tuple val(meta), path("*.fai")       , optional: false, emit: fai
+	tuple val(meta), path("*.flagstat") , optional: false, emit: flagstat
 	tuple val(task.process), val("samtools")        , eval("samtools --version | head -n 1 | sed 's/^samtools //'")                      , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"
 	def args = task.ext.args ?: ""
 	"""
-	samtools faidx ${fasta}
+	samtools flagstat \\
+		${args} \\
+		${bam} \\
+		> ${prefix}.flagstat
 	"""
 }

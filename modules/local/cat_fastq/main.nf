@@ -13,6 +13,7 @@ process CAT_FASTQ {
 	output:
 	tuple val(meta), path("*_r1.fastq.gz"), optional: false, emit: fastq1
 	tuple val(meta), path("*_r2.fastq.gz"), optional: true , emit: fastq2
+	tuple val(task.process), val("cat"), eval("cat --version | head -n 1 | sed 's/cat (GNU coreutils) //'"), topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

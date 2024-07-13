@@ -8,6 +8,7 @@ report_header_info:
 
 show_analysis_paths: False
 show_analysis_time: False
+disable_version_detection: true
 
 show_hide_buttons:
   - Replicates
@@ -43,6 +44,8 @@ report_section_order:
     order: 990
   picard:
     order: 980
+  samtools:
+    order: 971
   spp_xcorr:
     order: 970
   deepTools:
@@ -51,8 +54,10 @@ report_section_order:
     order: 950
   homer_findmotifsgenome:
     order: 890
-  sourmash:
+  kraken:
     order: 790
+  sourmash:
+    order: 780
   fastqc_raw:
     order: 90
   fastqc_trimmed:
@@ -249,4 +254,5 @@ table_cond_formatting_rules:
     fail:
       - gt: 70
 
-
+kraken:
+  top_n: 10

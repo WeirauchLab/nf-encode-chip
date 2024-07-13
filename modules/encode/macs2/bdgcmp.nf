@@ -18,6 +18,10 @@ process MACS2_BDGCMP {
 	output:
 	tuple val(meta), path("*.fc.signal.bigwig")  , optional: false, emit: fc_bigwig
 	tuple val(meta), path("*.pval.signal.bigwig"), optional: false, emit: pval_bigwig
+	tuple val(task.process), val("macs2")   , eval("macs2 --version | head -n 1 | sed 's/macs2 //'")                , topic: versions
+	tuple val(task.process), val("bedtools"), eval("bedtools --version | sed 's/bedtools v//'")                     , topic: versions
+	tuple val(task.process), val("awk")     , eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'")                , topic: versions
+	tuple val(task.process), val("bedGraphToBigWig"), eval("bedGraphToBigWig 2>&1 | head -n 1 | sed 's/bedGraphToBigWig v //;s/ -.*//'") , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

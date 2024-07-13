@@ -101,12 +101,25 @@ workflow CHIPSEQ {
 		}
 		.set{ch_reproducibility_peaks_branched}
 
+	
+
+	Channel.topic('versions')
+		.unique()
+		.map{ process, name, version -> [process, "  ${name}: \"${version}\""] }
+		.groupTuple(by: 0)
+		.map{ process, name_versions ->
+			def name_versions_collapsed = name_versions.join("\n")
+			"${process}:\n${name_versions_collapsed}"
+		}
+		.set{ch_versions}
+
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],
 		ch_multiqc_fastqc_raw,
 		Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
 		ch_multiqc_fastqc_trimmed,
 		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
@@ -116,7 +129,8 @@ workflow CHIPSEQ {
 		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_metrics.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_counts.collect{it[1]}.ifEmpty{[]},
-		ch_homer_findmotifsgenome_results.collect{it[1]}.ifEmpty{[]}
+		ch_homer_findmotifsgenome_results.collect{it[1]}.ifEmpty{[]},
+		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
 	publish:

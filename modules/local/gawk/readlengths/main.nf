@@ -13,6 +13,8 @@ process GAWK_READLENGTHS {
 
 	output:
 	tuple val(meta), path("*.readlengths.txt"), optional: false, emit: txt
+	tuple val(task.process), val("zcat") , eval("zcat --version | head -n 1 | sed 's/zcat (gzip) //'") , topic: versions
+	tuple val(task.process), val("awk")  , eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'")      , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

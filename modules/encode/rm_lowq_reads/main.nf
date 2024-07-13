@@ -13,6 +13,7 @@ process RM_LOWQ_READS {
 
 	output:
 	tuple val(meta), path("*.bam"), optional: false, emit: bam
+	tuple val(task.process), val("samtools")        , eval("samtools --version | head -n 1 | sed 's/^samtools //'")                      , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.lowq_filt"

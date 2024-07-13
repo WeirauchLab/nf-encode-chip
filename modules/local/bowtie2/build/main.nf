@@ -12,6 +12,7 @@ process BOWTIE2_BUILD {
 
 	output:
 	tuple val(meta), path("*.bt2"), optional: false, emit: index
+	tuple val(task.process), val("bowtie2") , eval("bowtie2 --version | head -n 1 | sed 's/^.*version //'") , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

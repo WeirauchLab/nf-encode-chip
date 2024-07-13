@@ -12,6 +12,10 @@ process BAM_TO_TA {
 
 	output:
 	tuple val(meta), path("*.tagAlign.gz"), optional: false, emit: tagAlign
+	tuple val(task.process), val("samtools"), eval("samtools --version | head -n 1 | sed 's/^samtools //'") , topic: versions
+	tuple val(task.process), val("bedtools"), eval("bedtools --version | sed 's/bedtools v//'")             , topic: versions
+	tuple val(task.process), val("awk")     , eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'")        , topic: versions
+	tuple val(task.process), val("gzip")    , eval("gzip --version | head -n 1 | sed 's/gzip //'")          , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

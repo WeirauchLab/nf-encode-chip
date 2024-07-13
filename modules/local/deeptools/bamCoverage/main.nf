@@ -12,6 +12,7 @@ process DEEPTOOLS_BAMCOVERAGE {
 
 	output:
 	tuple val(meta), path("*.bw"), optional: true, emit: bigwig
+	tuple val(task.process), val("deeptools"), eval("deeptools --version | head -n 1 | sed 's/^deeptools //'"), topic: versions
 
 	script:
 	def args = task.ext.args ?: ""

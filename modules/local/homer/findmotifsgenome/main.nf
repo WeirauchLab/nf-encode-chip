@@ -17,6 +17,7 @@ process HOMER_FINDMOTIFSGENOME {
 	tuple val(meta), path("*_knownResults.txt"), optional: true, emit: knownResults
 	tuple val(meta), path("*_denovo.html")     , optional: true, emit: denovo
 	tuple val(meta), path("*.tar.gz")          , optional: true, emit: tar
+	tuple val(task.process), val("HOMER")      , val("4.9.1")  , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

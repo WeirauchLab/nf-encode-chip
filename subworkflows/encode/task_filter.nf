@@ -2,6 +2,7 @@ include { RM_LOWQ_READS          } from '../../modules/encode/rm_lowq_reads/main
 include { PICARD_MARKDUPLICATES  } from '../../modules/local/picard/markDuplicates/main'
 include { RM_DUPLICATES          } from '../../modules/encode/rm_dup/main'
 include { SAMTOOLS_INDEX         } from "../../modules/local/samtools/index/main"
+include { SAMTOOLS_FLAGSTAT      } from "../../modules/local/samtools/flagstats/main"
 
 workflow TASK_FILTER {
 	take:
@@ -47,14 +48,18 @@ workflow TASK_FILTER {
 	SAMTOOLS_INDEX(ch_filtered)
 	ch_filtered_bai = SAMTOOLS_INDEX.out.bai
 
+	SAMTOOLS_FLAGSTAT(ch_filtered)
+
 	publish:
-	ch_filtered       >> (save_filtered_bam ? "encode/alignments/filtered" : null)
-	ch_filtered_bai   >> (save_filtered_bam ? "encode/alignments/filtered" : null)
-	ch_picard_metrics >> "encode/logs/picard_metrics"
+	ch_filtered                    >> (save_filtered_bam ? "encode/alignments/filtered" : null)
+	ch_filtered_bai                >> (save_filtered_bam ? "encode/alignments/filtered" : null)
+	ch_picard_metrics              >> "encode/logs/picard_metrics"
+	SAMTOOLS_FLAGSTAT.out.flagstat >> "encode/alignments/flagstats/filtered"
 
 	emit:
 	bam            = ch_filtered
 	bai            = ch_filtered_bai
 	picard_metrics = ch_picard_metrics
+	flagstat       = SAMTOOLS_FLAGSTAT.out.flagstat
 
 }

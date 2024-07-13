@@ -13,7 +13,7 @@ process SAMTOOLS_FAIDX_CHR {
 
 	output:
 	tuple val(meta), path("*.fasta")     , optional: false, emit: fasta
-	eval "samtools --version | head -n 1", optional: false, emit: version
+	tuple val(task.process), val("samtools")        , eval("samtools --version | head -n 1 | sed 's/^samtools //'")                      , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

@@ -13,6 +13,7 @@ process SOURMASH_GATHER {
 
 	output:
 	tuple val(meta), path("*.csv"), optional: true, emit: csv, topic: sourmash_gather_csv
+	tuple val(task.process), val("sourmash"), eval("sourmash --version | sed 's/sourmash //'")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

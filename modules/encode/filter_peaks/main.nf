@@ -14,6 +14,8 @@ process FILTER_PEAKS {
 
 	output:
 	tuple val(meta), path("*.narrowPeak"), optional: false, emit: narrowPeak
+	tuple val(task.process), val("bedtools"), eval("bedtools --version | sed 's/bedtools v//'")                     , topic: versions
+	tuple val(task.process), val("grep")    , eval("grep --version | head -n 1 | sed 's/grep (GNU grep) //'")       , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.bl_filt"

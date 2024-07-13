@@ -13,6 +13,7 @@ process HOMER_POSTPROC_FINDMOTIFSGENOME {
 
 	output:
 	tuple val(meta), path("*.tsv"), optional: true, emit: tsv
+	tuple val(task.process), val("R"), eval("R --version | head -n 1 | sed 's/R version //;s/ .*//'")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}_knownResults"

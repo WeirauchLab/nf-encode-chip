@@ -15,6 +15,10 @@ process CREATE_PSEUDOREPS {
 	tuple val(meta), path("*.tagAlign.gz"), optional: false, emit: tagAlign
 	tuple val(meta), path("*pr1.tagAlign.gz"), optional: false, emit: pr1
 	tuple val(meta), path("*pr2.tagAlign.gz"), optional: false, emit: pr2
+	tuple val(task.process), val("gzip")    , eval("gzip --version | head -n 1 | sed 's/gzip //'")                  , topic: versions
+	tuple val(task.process), val("zcat")    , eval("zcat --version | head -n 1 | sed 's/zcat (gzip) //'")           , topic: versions
+	tuple val(task.process), val("shuf")    , eval("shuf --version | head -n 1 | sed 's/shuf (GNU coreutils) //'")  , topic: versions
+	tuple val(task.process), val("split")   , eval("split --version | head -n 1 | sed 's/split (GNU coreutils) //'"), topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

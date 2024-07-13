@@ -35,8 +35,6 @@ workflow DEEPTOOLS {
 	ch_fingerprint_metrics = DEEPTOOLS_PLOTFINGERPRINT.out.quality_metrics
 	ch_fingerprint_counts  = DEEPTOOLS_PLOTFINGERPRINT.out.raw_counts
 
-
-
 	emit:
 	bigwig              = ch_bamcoverage_bigwig
 	fingerprint_metrics = ch_fingerprint_metrics

@@ -12,7 +12,7 @@ process GZIP_GUNZIP {
 
 	output:
 	tuple val(meta), path("$gunzipped"), optional: false, emit: gunzip
-	eval "gunzip --version | head -n 1", emit: version
+	tuple val(task.process), val("gzip")            , eval("gunzip --version | head -n 1 | sed 's/gunzip (gzip) //'")                               , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

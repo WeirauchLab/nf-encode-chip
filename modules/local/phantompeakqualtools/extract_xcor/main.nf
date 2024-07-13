@@ -12,6 +12,7 @@ process EXTRACT_XCOR {
 
 	output:
 	tuple val(meta), path("*.crosscorr.csv"), optional: false, emit: csv, topic: spp_xcorr
+	//tuple val(task.process), val("R"), eval("R --version | head -n 1 | sed 's/R version //'")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

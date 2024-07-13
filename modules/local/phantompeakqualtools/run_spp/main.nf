@@ -16,6 +16,7 @@ process RUN_SPP {
 	tuple val(meta), path("*.spp.out")  , optional: false, emit: spp, topic: spp_log
 	tuple val(meta), path("*.spp.pdf")  , optional: false, emit: pdf
 	tuple val(meta), path("*.spp.Rdata"), optional: false, emit: rdata
+	tuple val(task.process), val("phantompeakqualtools"), val("1.2.2")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

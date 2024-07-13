@@ -15,6 +15,8 @@ process IDR_PEAKS {
 	output:
 	tuple val(meta), path("*.idr-thresh.narrowPeak")  , optional: true, emit: narrowPeak
 	tuple val(meta), path("*.unthresholded-peaks.png"), optional: true, emit: png
+	tuple val(task.process), val("idr")     , eval("idr --version | head -n 1 | sed 's/IDR //'")                    , topic: versions
+	tuple val(task.process), val("awk")     , eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'")                , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

@@ -18,6 +18,7 @@ process MACS2_CALLPEAK {
 	tuple val(meta), path("*.narrowPeak")       , optional: true, emit: narrowPeak
 	tuple val(meta), path("*treat_pileup.bdg")  , optional: true, emit: treat_pileup
 	tuple val(meta), path("*control_lambda.bdg"), optional: true, emit: control_lambda
+	tuple val(task.process), val("macs2")           , eval("macs2 --version | head -n 1 | sed 's/macs2 //'")                             , topic: versions
 	
 
 	script:
