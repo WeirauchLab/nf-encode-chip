@@ -4,11 +4,11 @@ include { GZIP_GUNZIP as GUNZIP_BL_PEAKS      } from '../../modules/local/gzip/g
 include { SAMTOOLS_FAIDX                      } from '../../modules/local/samtools/faidx/main'
 include { SAMTOOLS_FAIDX_CHR                  } from '../../modules/local/samtools/faidx_chr/main'
 include { BOWTIE2_BUILD                       } from '../../modules/local/bowtie2/build/main'
+include { UNTAR as UNTAR_BOWTIE2_INDEX        } from '../../modules/nf-core/untar/main'
 
 workflow PREPARE_GENOME {
 	take:
-	genome_fasta
-	chrom_sizes
+	genome_fasta     // string
 	gensz
 	bowtie2_index
 	blacklist_peaks
@@ -37,11 +37,18 @@ workflow PREPARE_GENOME {
 		ch_gensz = channel.value(gensz)
 	}
 
-	// genome
+	// ----------------------------------------------------------------------- //
+	// Prepare bowtie2 index
+	// ----------------------------------------------------------------------- //
+
 	// TODO: The pre-built indices need to be reassessed
+
 	if (!bowtie2_index) {
 		BOWTIE2_BUILD(ch_genome_fasta)
 		ch_bowtie2_index = BOWTIE2_BUILD.out.index
+	} else if ( bowtie2_index.endsWith('.tar.gz') || bowtie2_index.endsWith('.tar') ) {
+		UNTAR_BOWTIE2_INDEX([[id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
+		ch_bowtie2_index = UNTAR.out.untar
 	} else {
 		ch_bowtie2_index = channel.value([ [id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
 	}
@@ -55,13 +62,10 @@ workflow PREPARE_GENOME {
 		ch_blacklist_peaks = channel.value([[:],[]])
 	}
 
-	
-
-	// TODO: update output path comments
 	emit:
-	genome_fasta       = ch_genome_fasta // path(fasta)
-	genome_fai         = ch_genome_fai
-	gensz              = ch_gensz        // int or string
-	bowtie2_index      = ch_bowtie2_index // path(bowtie2_index)
-	blacklist_peaks	   = ch_blacklist_peaks // [ val(meta), path(blacklist_peaks) ]
+	genome_fasta       = ch_genome_fasta    // channel: [ val(meta), path(genome_fasta) ]
+	genome_fai         = ch_genome_fai      // channel: [ val(meta), path(fai) ]
+	gensz              = ch_gensz           // int or string
+	bowtie2_index      = ch_bowtie2_index   // channel: [ val(meta), path(bowtie2_index) ]
+	blacklist_peaks	   = ch_blacklist_peaks // channel: [ val(meta), path(blacklist_peaks) ]
 }

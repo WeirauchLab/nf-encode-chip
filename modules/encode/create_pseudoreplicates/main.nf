@@ -34,8 +34,22 @@ process CREATE_PSEUDOREPS {
 		rm -f ${prefix}.00 ${prefix}.01
 		"""
 	} else {
-		// TODO: paired-end
+		// TODO: check paired-end implementation
 		"""
+		nlines=\$(( (\$(zcat -f "${tagAlign}" | wc -l) / 2 + 1) / 2 ))
+		zcat ${tagAlign} \\
+			| sed 'N;s/\\n/\\t/' \\
+			| shuf --random-source=<(openssl enc -aes-256-ctr -pass pass:${pseudorep_seed} -nosalt </dev/zero 2>/dev/null) \\
+			| split -d -l \$nlines - "${prefix}."
+		
+		cat "${prefix}.00" \\
+			| awk 'BEGIN{OFS="\\t"} {print \$1,\$2,\$3,\$4,\$5,\$6; print \$7,\$8,\$9,\$10,\$11,\$12}' \\
+			| gzip -nc > "${prefix}_pr1.tagAlign.gz"
+		
+		cat "${prefix}.01" \\
+			| awk 'BEGIN{OFS="\\t"} {print \$1,\$2,\$3,\$4,\$5,\$6; print \$7,\$8,\$9,\$10,\$11,\$12}' \\
+			| gzip -nc > "${prefix}_pr2.tagAlign.gz"
+		rm -f ${prefix}.00 ${prefix}.01
 		"""
 	}
 }

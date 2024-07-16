@@ -5,7 +5,7 @@ process KRAKEN2_KRAKEN2 {
 	container "community.wave.seqera.io/library/kraken2:2.1.3--517e0e9dce07cd35"
 
 	input:
-	tuple val(meta), path(fastq1), path(fastq2)
+	tuple val(meta), path(fastq)
 	tuple val(meta2), path(db)
 
 	output:
@@ -22,6 +22,6 @@ process KRAKEN2_KRAKEN2 {
 		--report ${prefix}.kraken2.report \\
 		${!meta.single_end ? "--paired" : ""} \\
 		${args} \\
-		${fastq1} ${fastq2}
+		${fastq}
 	"""
 }

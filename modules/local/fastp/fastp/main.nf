@@ -8,13 +8,12 @@ process FASTP_FASTP {
 	container "community.wave.seqera.io/library/fastp:0.23.4--4d9e23447c67e79e"
 
 	input:
-	tuple val(meta), path(fastq1), path(fastq2)
-	val args
+	tuple val(meta), path(fastq)
 
 	output:
-	tuple val(meta), path("*.fastp.fastq.gz"), optional: false, emit: fastq
-	tuple val(meta), path("*.json")          , optional: false, emit: json, topic: fastp_json
-	tuple val(meta), path("*.html")          , optional: false, emit: html, topic: fastp_html
+	tuple val(meta), path("*.fastp.fastq.gz"), optional: true, emit: fastq
+	tuple val(meta), path("*.json")          , optional: true, emit: json, topic: fastp_json
+	tuple val(meta), path("*.html")          , optional: true, emit: html, topic: fastp_html
 	tuple val(task.process), val("fastp") , eval("fastp --version 2>&1 | head -n 1 | sed 's/fastp //'") , topic: versions
 
 	script:
@@ -22,9 +21,8 @@ process FASTP_FASTP {
 	def args = task.ext.args ?: ""
 	if (meta.single_end){
 		"""
-		if [ "${fastq1}" != "${prefix}.fastq.gz" ]; then
-			mv ${fastq1} ${prefix}.fastq.gz
-		fi
+		# snippet from nf-core's fastp module
+		[ ! -f  ${prefix}.fastq.gz ] && ln -sf $fastq ${prefix}.fastq.gz
 
 		fastp \\
 			--in1 ${prefix}.fastq.gz \\
@@ -36,12 +34,9 @@ process FASTP_FASTP {
 		"""
 	} else {
 		"""
-		if [ "${fastq1}" != "${prefix}_1.fastq.gz" ]; then
-			mv ${fastq1} ${prefix}_1.fastq.gz
-		fi
-		if [ "${fastq2}" != "${prefix}_2.fastq.gz" ]; then
-			mv ${fastq2} ${prefix}_2.fastq.gz
-		fi
+		# snippet from nf-core's fastp module
+		[ ! -f  ${prefix}_1.fastq.gz ] && ln -sf ${fastq[0]} ${prefix}_1.fastq.gz
+		[ ! -f  ${prefix}_2.fastq.gz ] && ln -sf ${fastq[1]} ${prefix}_2.fastq.gz
 
 		fastp \\
 			--in1 ${prefix}_1.fastq.gz \\

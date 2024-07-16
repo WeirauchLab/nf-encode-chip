@@ -90,7 +90,7 @@ class ReproducibilityStats:
         if self.rescue_ratio is not None and self.consistency_ratio is not None:
             if self.rescue_ratio > 2.0 and self.consistency_ratio > 2.0:
                 self.reproducibility = "fail"
-            if self.rescue_ratio > 2.0 or self.consistency_ratio > 2.0:
+            elif self.rescue_ratio > 2.0 or self.consistency_ratio > 2.0:
                 self.reproducibility = "borderline"
             else:
                 self.reproducibility = "pass"

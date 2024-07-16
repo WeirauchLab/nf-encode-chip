@@ -9,7 +9,6 @@ include { HOMER_POSTPROC_FINDMOTIFSGENOME } from "../modules/local/homer/postpro
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
-//include { TASK_ALIGN    } from "../subworkflows/encode/task_align"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 // Validate input parameters
@@ -19,9 +18,12 @@ log.info paramsSummaryLog(workflow)
 
 workflow CHIPSEQ {
 
+	// ------------------------
+	// INPUTS
+	// ------------------------
+
 	PREPARE_GENOME(
 		params.fasta,
-		params.chrom_sizes,
 		params.gensz,
 		params.bowtie2_index,
 		params.blacklist_peaks
@@ -29,13 +31,17 @@ workflow CHIPSEQ {
 
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
-		.map{ meta, fq1, fq2 -> [ meta + [sample_type: "sample"], fq1, fq2 ] }
+		.map{ meta, fq1, fq2 -> 
+			if(fq2){
+				[ meta + [sample_type: "sample", single_end: false], [fq1, fq2] ]
+			} else {
+				[ meta + [sample_type: "sample", single_end: true], [fq1] ]
+			}
+		}
 		.set{ch_input}
 	
 	PREPARE_FASTQ(
 		ch_input,
-		params.read_length_reads ? params.read_length_reads : [],
-		params.fastp_extra_args,
 		params.skip_adapter_trimming,
 		params.save_trimmed_fastq
 	)
@@ -49,8 +55,6 @@ workflow CHIPSEQ {
 		PREPARE_GENOME.out.genome_fai,
 		PREPARE_GENOME.out.gensz,
 		PREPARE_GENOME.out.bowtie2_index,
-		params.multimapping ? params.multimapping : [],
-		params.local_mode ?: false,
 		params.mapq_threshold ? params.mapq_threshold : [],
 		params.chr_filter ? params.chr_filter : [],
 		params.pseudorep_seed ? params.pseudorep_seed : 0,
@@ -101,8 +105,6 @@ workflow CHIPSEQ {
 		}
 		.set{ch_reproducibility_peaks_branched}
 
-	
-
 	Channel.topic('versions')
 		.unique()
 		.map{ process, name, version -> [process, "  ${name}: \"${version}\""] }
@@ -121,6 +123,7 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.lib_qc.collect{it[1]}.ifEmpty{[]},
 		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},

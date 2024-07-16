@@ -8,7 +8,7 @@ process BOWTIE2_ALIGN {
 	container "community.wave.seqera.io/library/bowtie2_samtools:5ffb83f41ffa0c0e"
 
 	input:
-	tuple val(meta) , path(fastq1), path(fastq2)
+	tuple val(meta) , path(fastq)
 	tuple val(meta2), path(fasta)
 	tuple val(meta3), path(index)
 
@@ -23,7 +23,7 @@ process BOWTIE2_ALIGN {
 	def prefix = task.ext.prefix ?: "${meta.id}"
 	def args = task.ext.args ?: ""
 	def index_prefix = index[0].toString() - ~/(\.rev)?\.[0-9]+\.bt2$/
-	def fastq_args = meta.single_end ? "-U ${fastq1}" : "-1 ${fastq1} -2 ${fastq2}"
+	def fastq_args = meta.single_end ? "-U ${fastq}" : "-1 ${fastq[0]} -2 ${fastq[1]}"
 	"""
 	bowtie2 \\
 		--threads ${task.cpus} \\

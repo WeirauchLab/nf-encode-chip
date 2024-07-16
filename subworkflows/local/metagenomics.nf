@@ -3,7 +3,7 @@ include { KRAKEN2_CLASSIFIER  } from "./kraken2_classifier"
 
 workflow METAGENOMICS {
 	take:
-	ch_fastq       // channel: [ val(meta), path(fastq1), path(fastq2) ]
+	ch_fastq       // channel: [ val(meta), path(fastq1) ] or [ val(meta), [path(fastq1), path(fastq2)] ]
 	sourmash_db    // file or []
 	skip_sourmash  // boolean
 	kraken2_db     // file or []

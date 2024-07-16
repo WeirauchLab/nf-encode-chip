@@ -5,7 +5,7 @@ process CAT_FASTQ {
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
-	//container ""
+	container "community.wave.seqera.io/library/coreutils:9.5--25d2233f596a9d96"
 
 	input:
 	tuple val(meta), path(fastq1), path(fastq2)

@@ -1,6 +1,5 @@
-name: cat_fastq
 channels:
+  - conda-forge
   - bioconda
-  - defaults
 dependencies:
-  - bioconda::cat=5.2.3
+  - conda-forge::coreutils=9.5

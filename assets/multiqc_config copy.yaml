@@ -1,3 +1,42 @@
+title: "ChIP-seq Analysis Report"
+intro_text: "This pipeline is based off the steps in ENCODE's ChIP-seq pipeline (v2.0.0). Minor modifications have been made."
+
+report_header_info:
+  - Contact E-mail: "NA"
+  - Application Type: "ChIP-seq"
+  - Project Type: "NA"
+
+show_analysis_paths: False
+show_analysis_time: False
+disable_version_detection: True
+
+show_hide_buttons:
+  - Replicates
+  - Pseudoreplicates
+  - Pooled Samples
+show_hide_mode:
+  - hide
+  - show
+  - show
+show_hide_patterns:
+  - ["_sample","_pr1","pr2"]
+  - ["_pr1","pr2"]
+  - ["_sample"]
+
+table_columns_placement:
+  FastQC (raw):
+    total_sequences: 1
+
+table_columns_visible:
+  fastp:
+    pct_duplication: False
+  FastQC (raw): False
+  FastQC (trimmed): False
+  homer_findmotifsgenome_table:
+    "p_value": False
+    "log_p_value": False
+    "rank": False
+
 report_section_order:
   fastp:
     order: 1000
@@ -53,8 +92,11 @@ sp:
   sourmash/gather:
     fn: "*_matches.csv"
 
+lib_qc:
+  fn: "*.lib_qc.tsv"
+
 table_cond_formatting_rules:
-  mqc_generalstats_bowtie_2_hisat2_overall_alignment_rate:
+  mqc-generalstats-bowtie_2_hisat2_overall_alignment_rate:
     pass:
       - gt: 80
       - eq: 80
@@ -62,7 +104,7 @@ table_cond_formatting_rules:
       - lt: 80
     fail:
       - lt: 60
-  mqc_generalstats_fastp_after_filtering_gc_content:
+  mqc-generalstats-fastp-after_filtering_gc_content:
     pass:
       - lt: 60
       - eq: 60
@@ -72,7 +114,7 @@ table_cond_formatting_rules:
     fail:
       - gt: 70
       - lt: 30
-  mqc_generalstats_fastp_after_filtering_q30_bases:
+  mqc-generalstats-fastp-after_filtering_q30_bases:
     pass:
       - gt: 80
       - eq: 80
@@ -80,14 +122,14 @@ table_cond_formatting_rules:
       - lt: 80
     fail:
       - lt: 70
-  mqc_generalstats_fastp_after_filtering_q30_rate:
+  mqc-generalstats-fastp-after_filtering_q30_rate:
     pass:
       - gt: 90
     warn:
       - lt: 90
     fail:
       - lt: 80
-  mqc_generalstats_fastp_filtering_result_passed_filter_reads:
+  mqc-generalstats-fastp-filtering_result_passed_filter_reads:
     pass:
       - gt: 30000000
       - eq: 30000000
@@ -95,7 +137,7 @@ table_cond_formatting_rules:
       - lt: 30000000
     fail:
       - lt: 10000000
-  mqc_generalstats_fastp_pct_duplication:
+  mqc-generalstats-fastp-pct_duplication:
     pass:
       - lt: 50
       - eq: 50
@@ -103,7 +145,7 @@ table_cond_formatting_rules:
       - gt: 50
     fail:
       - gt: 70
-  mqc_generalstats_fastp_pct_surviving:
+  mqc-generalstats-fastp-pct_surviving:
     pass:
       - gt: 90
       - eq: 90
@@ -111,7 +153,7 @@ table_cond_formatting_rules:
       - lt: 90
     fail:
       - lt: 80
-  mqc_generalstats_fastqc_raw_percent_duplicates:
+  mqc-generalstats-fastqc_raw-percent_duplicates:
     pass:
       - lt: 50
       - eq: 50
@@ -119,7 +161,7 @@ table_cond_formatting_rules:
       - gt: 50
     fail:
       - gt: 70
-  mqc_generalstats_fastqc_raw_percent_fails:
+  mqc-generalstats-fastqc_raw-percent_fails:
     pass:
       - lt: 10
       - eq: 10
@@ -127,7 +169,7 @@ table_cond_formatting_rules:
       - gt: 10
     fail:
       - gt: 20
-  mqc_generalstats_fastqc_raw_percent_gc:
+  mqc-generalstats-fastqc_raw-percent_gc:
     pass:
       - gt: 40
       - eq: 40
@@ -139,7 +181,7 @@ table_cond_formatting_rules:
     fail:
       - lt: 30
       - gt: 70
-  mqc_generalstats_fastqc_raw_total_sequences:
+  mqc-generalstats-fastqc_raw-total_sequences:
     pass:
       - gt: 30000000
       - eq: 30000000
@@ -147,7 +189,7 @@ table_cond_formatting_rules:
       - lt: 30000000
     fail:
       - lt: 10000000
-  mqc_generalstats_fastqc_trimmed_percent_duplicates:
+  mqc-generalstats-fastqc_trimmed-percent_duplicates:
     pass:
       - lt: 50
       - eq: 50
@@ -155,7 +197,7 @@ table_cond_formatting_rules:
       - gt: 50
     fail:
       - gt: 70
-  mqc_generalstats_fastqc_trimmed_percent_fails:
+  mqc-generalstats-fastqc_trimmed-percent_fails:
     pass:
       - lt: 10
       - eq: 10
@@ -163,7 +205,7 @@ table_cond_formatting_rules:
       - gt: 10
     fail:
       - gt: 20
-  mqc_generalstats_fastqc_trimmed_percent_gc:
+  mqc-generalstats-fastqc_trimmed-percent_gc:
     pass:
       - gt: 40
       - eq: 40
@@ -175,7 +217,7 @@ table_cond_formatting_rules:
     fail:
       - lt: 30
       - gt: 70
-  mqc_generalstats_fastqc_trimmed_total_sequences:
+  mqc-generalstats-fastqc_trimmed-total_sequences:
     pass:
       - gt: 30000000
       - eq: 30000000
@@ -183,7 +225,7 @@ table_cond_formatting_rules:
       - lt: 30000000
     fail:
       - lt: 10000000
-  mqc_generalstats_phantompeakqualtools_Estimated_Fragment_Length_bp:
+  mqc-generalstats-phantompeakqualtools-Estimated_Fragment_Length_bp:
     pass:
       - gt: 99
     warn:
@@ -192,7 +234,7 @@ table_cond_formatting_rules:
     fail:
       - lt: 50
       - gt: 1200
-  mqc_generalstats_phantompeakqualtools_NSC:
+  mqc-generalstats-phantompeakqualtools-NSC:
     pass:
       - gt: 1.1
       - eq: 1.1
@@ -200,7 +242,7 @@ table_cond_formatting_rules:
       - lt: 1.1
     fail:
       - lt: 1.05
-  mqc_generalstats_phantompeakqualtools_RSC:
+  mqc-generalstats-phantompeakqualtools-RSC:
     pass:
       - gt: 1
       - eq: 1
@@ -208,7 +250,7 @@ table_cond_formatting_rules:
       - lt: 1
     fail:
       - lt: 0.8
-  mqc_generalstats_picard_mark_duplicates_PERCENT_DUPLICATION:
+  mqc-generalstats-picard_mark_duplicates-PERCENT_DUPLICATION:
     pass:
       - lt: 50
       - eq: 50

@@ -5,7 +5,7 @@ process RM_DUPLICATES {
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
-	//container ""
+	container "community.wave.seqera.io/library/samtools:1.20--b5dfbd93de237464"
 
 	input:
 	tuple val(meta), path(bam)
@@ -25,5 +25,14 @@ process RM_DUPLICATES {
 			> ${prefix}.bam
 		"""
 	}
-	//TODO: add paired-end support
+	else {
+		"""
+		samtools view \\
+			-F 1804 \\
+			-f 2 \\
+			-b ${bam} \\
+			> ${prefix}.bam
+		"""
+	}
+
 }

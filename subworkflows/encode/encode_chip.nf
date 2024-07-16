@@ -1,6 +1,7 @@
 
 include { DEEPTOOLS_PLOTFINGERPRINT } from "../../modules/local/deeptools/plotFingerprint/main"
 include { FILTER_PEAKS              } from "../../modules/encode/filter_peaks/main"
+include { LIB_QC                    } from "../../modules/encode/lib_qc/main"
 
 include { TASK_ALIGN               } from './task_align.nf'
 include { TASK_FILTER              } from './task_filter.nf'
@@ -22,8 +23,6 @@ workflow ENCODE_CHIP {
 	ch_fai
 	ch_gensz
 	ch_bowtie2_index
-	multimapping
-	local_mode
 	mapq_threshold
 	ch_chr_filter
 	pseudorep_seed
@@ -58,6 +57,10 @@ workflow ENCODE_CHIP {
 	)
 	ch_filtered_bam = TASK_FILTER.out.bam
 	ch_filtered_bam_bai = TASK_FILTER.out.bam.join(TASK_FILTER.out.bai, by: 0)
+
+	LIB_QC(
+		TASK_FILTER.out.markdup_bam
+	)
 
 	TASK_TAGALIGN(
 		TASK_FILTER.out.bam,
@@ -102,6 +105,7 @@ workflow ENCODE_CHIP {
 
 	publish:
 	ch_peaks_filtered		  >> "encode/macs2/filtered"
+	LIB_QC.out.tsv            >> "encode/lib_qc"
 
 	emit:
 	bam_aligned                = TASK_ALIGN.out.bam
@@ -119,5 +123,5 @@ workflow ENCODE_CHIP {
 	overlap_peaks              = TASK_REPRODUCIBILITY.out.overlap_peaks
 	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
 	overlap_reproducible_peaks = TASK_REPRODUCIBILITY.out.overlap_reproducible_peaks
-
+	lib_qc                     = LIB_QC.out.tsv
 }

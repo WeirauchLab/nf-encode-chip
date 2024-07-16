@@ -26,6 +26,7 @@ workflow TASK_FILTER {
 	}
 
 	ch_picard_metrics = Channel.empty()
+	ch_markdup        = Channel.empty()
 	if(markdup_method == "picard"){
 		PICARD_MARKDUPLICATES(
 			ch_lowq_filtered
@@ -61,5 +62,6 @@ workflow TASK_FILTER {
 	bai            = ch_filtered_bai
 	picard_metrics = ch_picard_metrics
 	flagstat       = SAMTOOLS_FLAGSTAT.out.flagstat
+	markdup_bam	   = ch_markdup
 
 }
