@@ -8,6 +8,7 @@ from multiqc.plots import linegraph
 from multiqc import config
 import csv
 import os
+from homer_findmotifsgenome import HomerFindMotifsGenome
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str)
@@ -24,7 +25,7 @@ lib_qc_pattern = "data/lib_qc/*.lib_qc.tsv"
 #    multiqc.load_config(args.config)
 
 # Parse known logs
-multiqc.parse_logs("data", config_files=[args.config])
+multiqc.parse_logs("data")
 
 # ----------------- Custom MultiQC modules -----------------
 # Library QC
@@ -239,41 +240,13 @@ Nt and Np\n
 )
 multiqc.report.modules.append(encode_reproducibility_module)
 
-homer_findmotifsgenome_data = {}
-for res in glob.glob(homer_findmotifsgenome_pattern):
-    with open(res) as f:
-        reader = csv.DictReader(f, delimiter="\t")
-        for row in reader:
-            sample_id = row["id"]
-            del row["id"]
-            homer_findmotifsgenome_data[sample_id] = row
-            break
-
-homer_findmotifsgenome_plot = table.plot(
-    data=homer_findmotifsgenome_data,
-    pconfig={
-        "id": "homer_findmotifsgenome_table",
-        "title": "HOMER Known Motifs",
-    },
+multiqc.report.modules.append(
+    HomerFindMotifsGenome(
+        file_pattern=homer_findmotifsgenome_pattern,
+        clean_str="_knownResults.tsv",
+    )
 )
-homer_findmotifsgenome_module = multiqc.BaseMultiqcModule(
-    name="HOMER findMotifsGenome",
-    anchor="homer_findmotifsgenome",
-    comment="Top motif results reported by HOMER.",
-)
-
-homer_findmotifsgenome_module.add_section(
-    name="Known Motifs",
-    plot=homer_findmotifsgenome_plot,
-    anchor="homer_findmotifsgenome_known",
-    description="""Top motif results reported by HOMER.
-    The table shows the top motif for each sample when
-    scanning known motifs.""",
-)
-multiqc.report.modules.append(homer_findmotifsgenome_module)
 
 
 # Write the report
-multiqc.write_report(
-    filename="multiqc_report.html", force=True, config_files=[args.config]
-)
+multiqc.write_report(filename="multiqc_report.html", force=True)
