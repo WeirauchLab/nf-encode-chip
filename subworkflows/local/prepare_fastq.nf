@@ -1,50 +1,68 @@
 
-include { CAT_FASTQ } from "../../modules/local/cat_fastq/main"
-include { GAWK_READLENGTHS } from '../../modules/local/gawk/readlengths/main'
+include { CAT_FASTQ                       } from "../../modules/nf-core/cat/fastq/main"
+include { GAWK_READLENGTHS                } from '../../modules/local/gawk/readlengths/main'
+include { FASTQC as FASTQC_RAW            } from '../../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_TRIMMED        } from '../../modules/nf-core/fastqc/main'
+include { FASTP_FASTP                     } from '../../modules/local/fastp/fastp/main'
 
 workflow PREPARE_FASTQ {
 	take:
-	ch_fastq // [ [meta], fastq1, fastq2 ]
-	read_length_reads // int or []
+	ch_fastq              // [ [meta], [fastq1, fastq2] ]
+	skip_adapter_trimming // boolean
+	save_trimmed_fastq	  // boolean
 
 	main:
-	
+
 	ch_fastq
 		.groupTuple(by: 0)
-		.map{meta, fastq1, fastq2 ->
-			meta.single_end = fastq2.flatten() ? false : true
-			[meta, fastq1.flatten(), fastq2.flatten()]
-		}
-		.branch{meta, fastq1, fastq2 ->
-			multiple: fastq1.size() > 1 || fastq2.size() > 1
-			single: true
+		.branch{meta, fq ->
+			multiple: fq.size() > 1
+                return [meta, fq.flatten()]
+			single: fq.size() == 1
+                return [meta, fq.flatten()]
 		}
 		.set {ch_fastq_branched}
 	
 	
 	CAT_FASTQ(ch_fastq_branched.multiple)
 
-	CAT_FASTQ.out.fastq1
-		.join(CAT_FASTQ.out.fastq2, by: 0,remainder: true)
+	CAT_FASTQ.out.reads
 		.mix(ch_fastq_branched.single)
 		.set {ch_fastq_concat}
 	
-	GAWK_READLENGTHS(
-		ch_fastq_concat.map{meta, fq1, fq2 -> [meta, fq1]},
-		read_length_reads
-	)
-	GAWK_READLENGTHS.out.txt
-		.join(ch_fastq_concat, by: 0)
-		.map{ meta, readlengths, fq1, fq2 ->
-			[meta + [read_length: readlengths.readLines()[0]], fq1, fq2 ]
-		}
-		.set {ch_fastq_concat}
+	FASTQC_RAW(ch_fastq_concat)
 	
-	// TODO: add trimming
-	ch_fastq_trimmed = Channel.empty()
+	if(skip_adapter_trimming) {
+		ch_fastp_json         = Channel.empty()
+		ch_fastp_html         = Channel.empty()
+		ch_fastqc_trimmed     = Channel.empty()
+		ch_fastqc_trimmed_zip = Channel.empty()
+		ch_fastq_output	      = ch_fastq_concat
+	} else {
+		FASTP_FASTP(
+			ch_fastq_concat
+		)
+        ch_fastq_output = FASTP_FASTP.out.fastq
+		ch_fastp_json = FASTP_FASTP.out.json
+		ch_fastp_html = FASTP_FASTP.out.html
+
+		FASTQC_TRIMMED(ch_fastq_output)
+		ch_fastqc_trimmed     = FASTQC_TRIMMED.out
+		ch_fastqc_trimmed_zip = FASTQC_TRIMMED.out.zip
+	}
+
+	publish:
+	FASTQC_RAW.out       >> "fastqc/raw"
+	ch_fastqc_trimmed    >> "fastqc/trimmed"
+	ch_fastp_json        >> "fastp"
+	ch_fastp_html        >> "fastp"
+	ch_fastq_output      >> (save_trimmed_fastq ? "fastq/trimmed" : null)
 
 	emit:
-	fastq = ch_fastq_concat
-	fastq_trimmed = ch_fastq_trimmed 
+	fastq              = ch_fastq_output
+	fastqc_raw_zip     = FASTQC_RAW.out.zip
+	fastqc_trimmed_zip = ch_fastqc_trimmed_zip
+	fastp_json         = ch_fastp_json
+	fastp_html         = ch_fastp_html
 
 }

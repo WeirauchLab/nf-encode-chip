@@ -12,7 +12,16 @@
 				"pattern": "^\\S+$",
 				"errorMessage": "Sample name must be provided and cannot contain spaces",
 				"meta": [
-					"id"
+					"id",
+					"sample_id"
+				]
+			},
+			"control_id": {
+				"type": "string",
+				"pattern": "^\\S+$",
+				"errorMessage": "Sample name must be provided and cannot contain spaces",
+				"meta": [
+					"control_id"
 				]
 			},
 			"group": {
