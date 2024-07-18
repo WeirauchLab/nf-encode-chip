@@ -1,5 +1,8 @@
 process RUN_SPP {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/phantompeakqualtools:1.2.2--f8026fe2526a5e18"
@@ -13,6 +16,7 @@ process RUN_SPP {
 	tuple val(meta), path("*.spp.out")  , optional: false, emit: spp, topic: spp_log
 	tuple val(meta), path("*.spp.pdf")  , optional: false, emit: pdf
 	tuple val(meta), path("*.spp.Rdata"), optional: false, emit: rdata
+	tuple val(task.process), val("phantompeakqualtools"), val("1.2.2")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"
@@ -22,9 +26,9 @@ process RUN_SPP {
 		| head -n 100 \\
 		| awk 'function abs(v) {return v < 0 ? -v : v} BEGIN{sum=0} {sum+=abs(\$3-\$2)} END{print int(sum/NR)}')
 	
-	if [ "$seq_type" == "tf" ]; then
+	if [ "$seq_type" = "tf" ]; then
 		max=\$((readlen + 10 > 50 ? readlen + 10 : 50))
-	elif [ "$seq_type" == "histone" ]; then
+	elif [ "$seq_type" = "histone" ]; then
 		max=\$((readlen + 10 > 100 ? readlen + 10 : 100))
 	fi
 

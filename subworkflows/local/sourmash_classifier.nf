@@ -5,12 +5,18 @@ workflow SOURMASH_CLASSIFIER {
 	take:
 	ch_fastq
 	ch_db
-	ch_param
 
 	main:
 
-	SOURMASH_SKETCH(ch_fastq, ch_param)
+	SOURMASH_SKETCH(ch_fastq)
 	SOURMASH_GATHER(SOURMASH_SKETCH.out.sketch, ch_db)
 
+	emit:
+	sketch = SOURMASH_SKETCH.out.sketch
+	csv    = SOURMASH_GATHER.out.csv
+
+	publish:
+	SOURMASH_SKETCH.out.sketch >> 'metagenomics/sourmash'
+	SOURMASH_GATHER.out.csv    >> 'metagenomics/sourmash'
 
 }

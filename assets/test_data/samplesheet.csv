@@ -1,4 +1,5 @@
 id,group,fastq_1,fastq_2
-ENCSR000DYI_rep1,ENCSR000DYI,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR000DYI/fastq_subsampled/rep1.subsampled.25.fastq.gz,
-ENCSR936XTK_rep1,ENCSR936XTK,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR936XTK/fastq_subsampled/rep1-R1.subsampled.50.fastq.gz,
-ENCSR936XTK_rep2,ENCSR936XTK,https://storage.googleapis.com/encode-pipeline-test-samples/encode-chip-seq-pipeline/ENCSR936XTK/fastq_subsampled/rep2-R1.subsampled.50.fastq.gz,
+ENCFF000VUU_1M,CTCF,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF000VUU_1M.fastq.gz,
+ENCFF000VUW_1M,CTCF,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF000VUW_1M.fastq.gz,
+ENCFF582JDA_1M,CTCF_PAIRED_1M,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF582JDA_1M_1.fastq.gz,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF582JDA_1M_2.fastq.gz
+ENCFF741YSW_1M,CTCF_PAIRED_1M,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF741YSW_500K_1.fastq.gz,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF741YSW_500K_2.fastq.gz

@@ -1,5 +1,8 @@
 process IDR_PEAKS {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools_bionumpy_idr:bbfce8dd45f2b8eb"
@@ -12,6 +15,8 @@ process IDR_PEAKS {
 	output:
 	tuple val(meta), path("*.idr-thresh.narrowPeak")  , optional: true, emit: narrowPeak
 	tuple val(meta), path("*.unthresholded-peaks.png"), optional: true, emit: png
+	tuple val(task.process), val("idr")     , eval("idr --version | head -n 1 | sed 's/IDR //'")                    , topic: versions
+	tuple val(task.process), val("awk")     , eval("awk -Wversion | sed '1!d; s/.*Awk //; s/,.*//'")                , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"

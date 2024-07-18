@@ -1,14 +1,20 @@
-include { TASK_ALIGN          } from "./task_align"
-include { TASK_FILTER         } from "./task_filter"
-include { TASK_MACS2          } from "./task_macs2"
-include { TASK_POSTPROC_PEAKS } from "./task_postproc_peaks"
-include { TASK_IDR            } from "./task_idr_peaks"
 
-include { BAM_TO_TA         } from "../../modules/encode/bam_to_ta/main"
-include { CREATE_PSEUDOREPS } from "../../modules/encode/create_pseudoreplicates/main"
-include { RUN_SPP           } from "../../modules/local/phantompeakqualtools/run_spp/main"
-include { EXTRACT_XCOR      } from "../../modules/local/phantompeakqualtools/extract_xcor/main"
-include { CAT_FILES         } from "../../modules/local/cat_files/main"
+include { DEEPTOOLS_PLOTFINGERPRINT } from "../../modules/local/deeptools/plotFingerprint/main"
+include { FILTER_PEAKS              } from "../../modules/encode/filter_peaks/main"
+include { LIB_QC                    } from "../../modules/encode/lib_qc/main"
+
+include { TASK_ALIGN               } from './task_align.nf'
+include { TASK_FILTER              } from './task_filter.nf'
+include { TASK_TAGALIGN            } from './task_tagalign.nf'
+include { TASK_XCORR               } from './task_xcorr.nf'
+include { TASK_MACS2               } from './task_macs2.nf'
+include { TASK_REPRODUCIBILITY     } from './task_reproducibility.nf'
+
+
+
+def subset_peak_meta(peak_channel, meta_keys){
+	peak_channel.map{meta, peak -> [meta.subMap(meta_keys), peak]}
+}
 
 workflow ENCODE_CHIP {
 	take:
@@ -17,130 +23,107 @@ workflow ENCODE_CHIP {
 	ch_fai
 	ch_gensz
 	ch_bowtie2_index
-	ch_bowtie2_mito_index
-	multimapping
-	local_mode
 	mapq_threshold
 	ch_chr_filter
 	pseudorep_seed
 	ch_blacklist_peaks
 	ch_idr_threshold_col
 	ch_idr_threshold
+	ch_mito_chr_name
+	ch_chip_mode
+	skip_peak_filtering
+	skip_idr
+	skip_overlap
 
 	main:
 
 	TASK_ALIGN(
 		ch_fastq,
 		ch_fasta,
-		ch_bowtie2_index,
-		multimapping,
-		local_mode
+		"bowtie2",
+		ch_bowtie2_index
 	)
+	ch_bam_aligned       = TASK_ALIGN.out.bam
+	ch_bam_aligned_index = TASK_ALIGN.out.bai
+	ch_bowtie2_log       = TASK_ALIGN.out.bowtie2_log
 
 	TASK_FILTER(
-		TASK_ALIGN.out.bam,
+		ch_bam_aligned,
 		mapq_threshold,
-		ch_fasta,
-		ch_fai,
-		ch_chr_filter
+		"picard",
+		false,
+		false,
+		true
+	)
+	ch_filtered_bam = TASK_FILTER.out.bam
+	ch_filtered_bam_bai = TASK_FILTER.out.bam.join(TASK_FILTER.out.bai, by: 0)
+
+	LIB_QC(
+		TASK_FILTER.out.markdup_bam
 	)
 
-	BAM_TO_TA(
-		TASK_FILTER.out.bam
+	TASK_TAGALIGN(
+		TASK_FILTER.out.bam,
+		pseudorep_seed,
+		false,
+		true
 	)
-	ch_tagalign = BAM_TO_TA.out.tagAlign
-
-	if(true){
-		CREATE_PSEUDOREPS(
-			ch_tagalign,
-			pseudorep_seed
-		)
-
-		ch_tagalign
-			.mix(
-				CREATE_PSEUDOREPS.out.pr1
-					.map{meta, tagalign ->
-						def new_meta = meta.clone()
-						new_meta.sample_type = "pr1"
-						new_meta.id = new_meta.id + "_pr1"
-						[ new_meta, tagalign ]
-					}
-			)
-			.mix(
-				CREATE_PSEUDOREPS.out.pr2
-					.map{meta, tagalign ->
-						def new_meta = meta.clone()
-						new_meta.sample_type = "pr2"
-						new_meta.id = new_meta.id + "_pr2"
-						[ new_meta, tagalign ]
-					}
-			)
-			.set { ch_tagalign }
-	}
-
-	ch_tagalign
-		.map{meta, ta ->
-			def group_meta = [group: meta.group, single_end: meta.single_end, sample_type: meta.sample_type]
-			[group_meta, ta]
-		}
-		.groupTuple(by: 0)
-		.filter{meta, ta -> ta.size() > 1}
-		.map{meta, ta -> 
-			def new_meta = meta.clone()
-			new_meta.sample_type = meta.sample_type + "_pooled"
-			new_meta.id = [new_meta.group,new_meta.sample_type].join("_") 
-			[new_meta, ta]
-		}
-		.set { ch_pool_ta_input }
-
-	CAT_FILES(ch_pool_ta_input,"tagAlign.gz")
-
-	ch_tagalign = ch_tagalign.mix(CAT_FILES.out.output)
-	
-	
-	// run SPP on processed tagAligns to get fragment length
-	RUN_SPP(
-		ch_tagalign,
-		"tf",
-		"chrM"
+	TASK_XCORR(
+		TASK_TAGALIGN.out.tagAlign,
+		ch_chip_mode,
+		ch_mito_chr_name
 	)
-	EXTRACT_XCOR(RUN_SPP.out.rdata)
-
-	RUN_SPP.out.spp
-		.join(ch_tagalign, by: 0)
-		.map{meta, spp, ta ->
-			def new_meta = meta.clone()
-			new_meta.frag_len = spp.readLines()[0].split("\t")[2] - ~/,.*/
-			[ new_meta, ta ]
-		}
-		.set { ch_processed_tagalign }
 
 	TASK_MACS2(
-		ch_processed_tagalign,
+		TASK_XCORR.out.tagAlign,
 		ch_fai,
-		ch_gensz
+		ch_gensz,
+		0
 	)
 
-	TASK_POSTPROC_PEAKS(
-		TASK_MACS2.out.narrowPeak,
-		ch_blacklist_peaks,
-		ch_chr_filter
-	)
+	// TASK postproc_peaks
+	if(skip_peak_filtering){
+		ch_peaks_filtered = TASK_MACS2.out.narrowPeak
+	} else {
+		FILTER_PEAKS(
+			TASK_MACS2.out.narrowPeak,
+			ch_blacklist_peaks,
+			ch_chr_filter
+		)
+		ch_peaks_filtered = FILTER_PEAKS.out.narrowPeak
+	}
 
-	TASK_IDR(
-		TASK_POSTPROC_PEAKS.out.narrowPeak,
+	// TASK reproducibility
+	TASK_REPRODUCIBILITY(
+		ch_peaks_filtered,
 		ch_idr_threshold_col,
-		ch_idr_threshold
+		ch_idr_threshold,
+		skip_idr,
+		skip_overlap
 	)
 
 
 	publish:
-	BAM_TO_TA.out.tagAlign >> "tagAlign/"
+	ch_peaks_filtered		  >> "encode/macs2/filtered"
+	LIB_QC.out.tsv            >> "encode/lib_qc"
 
 	emit:
-	tagAlign = BAM_TO_TA.out.tagAlign
-	dedup_bam = TASK_FILTER.out.bam
-	dedup_bai = TASK_FILTER.out.bai
-	xcor_csv = EXTRACT_XCOR.out.csv
-
+	bam_aligned                = TASK_ALIGN.out.bam
+	bam_aligned_index          = TASK_ALIGN.out.bai
+	bowtie2_log                = TASK_ALIGN.out.bowtie2_log
+	raw_flagstat               = TASK_ALIGN.out.flagstat
+	bam_filtered               = TASK_FILTER.out.bam
+	bam_filtered_index         = TASK_FILTER.out.bai
+	picard_metrics             = TASK_FILTER.out.picard_metrics
+	filtered_flagstat          = TASK_FILTER.out.flagstat
+	spp                        = TASK_XCORR.out.spp
+	xcorr_csv                  = TASK_XCORR.out.xcorr_csv
+	processed_tagalign         = TASK_TAGALIGN.out.tagAlign
+	narrowPeak                 = TASK_MACS2.out.narrowPeak
+	peaks_filtered             = ch_peaks_filtered
+	idr_peaks                  = TASK_REPRODUCIBILITY.out.idr_peaks
+	overlap_peaks              = TASK_REPRODUCIBILITY.out.overlap_peaks
+	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
+	overlap_reproducible_peaks = TASK_REPRODUCIBILITY.out.overlap_reproducible_peaks
+	lib_qc                     = LIB_QC.out.tsv
 }

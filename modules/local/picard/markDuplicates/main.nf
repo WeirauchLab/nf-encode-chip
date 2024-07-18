@@ -1,5 +1,8 @@
 process PICARD_MARKDUPLICATES {
 	tag "${meta.id}"
+	cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "biocontainers/picard:3.1.1--hdfd78af_0"
@@ -12,6 +15,7 @@ process PICARD_MARKDUPLICATES {
 	output:
 	tuple val(meta), path("*.bam")        , optional: true, emit: bam
 	tuple val(meta), path("*.metrics.txt"), optional: true, emit: metrics, topic: picard_markduplicates_log
+	tuple val(task.process), val("picard"), eval("picard MarkDuplicates --version 2>&1 | grep 'Version:' | sed 's/Version://'")             , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.dupmarked"

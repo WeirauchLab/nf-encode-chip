@@ -1,16 +1,24 @@
-include { MACS2_CALLPEAK } from '../../modules/encode/macs2/callpeak'
-include { MACS2_BDGCMP } from '../../modules/encode/macs2/bdgcmp'
+include { MACS2_CALLPEAK         } from '../../modules/encode/macs2/callpeak'
+include { MACS2_BDGCMP           } from '../../modules/encode/macs2/bdgcmp'
 
 workflow TASK_MACS2 {
 	take:
-	ch_tagalign
-	ch_fai
-	ch_gensz
+	ch_tagalign // [ val(meta), path(tagAlign) ]
+	ch_faidx    // [ val(meta), path(faidx) ]
+	ch_gensz	// integer or string
+	max_peaks   // integer
 
 	main:
 
-	ch_tagalign.collect{meta, ta -> [ [meta.id,ta] ]}.set{list_tagalign}
+	ch_narrowPeak  = Channel.empty()
+	ch_fc_bigwig   = Channel.empty()
+	ch_pval_bigwig = Channel.empty()
 
+	ch_tagalign
+		.collect{meta, ta -> [ [meta.id,ta] ]}
+		.set{list_tagalign}
+	// This tries to match the control tagAlign file with the treatment tagAlign file
+	// TODO: Make this use the pooled control tagAlign file
 	ch_tagalign
 		.map{meta, ta -> 
 			if(meta.control_id){
@@ -18,26 +26,17 @@ workflow TASK_MACS2 {
 				if(control_entry) {
 					[meta, ta, control_entry[1]]
 				}
-			} else {
-				[meta, ta, []]
+				} else {
+					[meta, ta, []]
+				}
 			}
-		}
 		.set {ch_macs2_input}
-
+	
 	MACS2_CALLPEAK(
 		ch_macs2_input,
-		ch_fai,
+		ch_faidx,
 		ch_gensz,
-		0,
-		[
-			"-f BED",
-			"-p 0.05",
-			"--nomodel",
-			"--shift 0",
-			"--keep-dup all",
-			"-B",
-			"--SPMR"
-		].join(" ")
+		max_peaks
 	)
 
 	MACS2_CALLPEAK.out.treat_pileup
@@ -53,13 +52,19 @@ workflow TASK_MACS2 {
 
 	MACS2_BDGCMP(
 		ch_bdgcmp_input,
-		ch_fai
+		ch_faidx
 	)
 
+
 	publish:
-		MACS2_CALLPEAK.out.narrowPeak >> "encode/peaks/raw"
-		MACS2_BDGCMP.out              >> "encode/macs2/signal"
-	
+	MACS2_CALLPEAK.out.narrowPeak       >> "encode/macs2/raw"
+	MACS2_BDGCMP.out.fc_bigwig          >> "encode/macs2/signal"
+	MACS2_BDGCMP.out.pval_bigwig        >> "encode/macs2/signal"
+
 	emit:
-		narrowPeak = MACS2_CALLPEAK.out.narrowPeak
+	narrowPeak  = MACS2_CALLPEAK.out.narrowPeak
+	fc_bigwig   = MACS2_BDGCMP.out.fc_bigwig
+	pval_bigwig = MACS2_BDGCMP.out.pval_bigwig
+
+
 }

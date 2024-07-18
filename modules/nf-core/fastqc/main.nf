@@ -13,7 +13,7 @@ process FASTQC {
     output:
     tuple val(meta), path("*.html"), emit: html
     tuple val(meta), path("*.zip") , emit: zip
-    path  "versions.yml"           , emit: versions
+    tuple val(task.process), val("FastQC") , eval("fastqc --version | head -n 1 | sed 's/FastQC v//'") , topic: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,10 +35,6 @@ process FASTQC {
         --threads $task.cpus \\
         $renamed_files
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastqc: \$( fastqc --version | sed '/FastQC v/!d; s/.*v//' )
-    END_VERSIONS
     """
 
     stub:
@@ -46,10 +42,5 @@ process FASTQC {
     """
     touch ${prefix}.html
     touch ${prefix}.zip
-
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        fastqc: \$( fastqc --version | sed '/FastQC v/!d; s/.*v//' )
-    END_VERSIONS
     """
 }

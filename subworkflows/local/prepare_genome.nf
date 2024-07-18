@@ -1,21 +1,18 @@
 
 include { GZIP_GUNZIP as GUNZIP_GENOME        } from '../../modules/local/gzip/gunzip/main'
-include { GZIP_GUNZIP as GUNZIP_MITO          } from '../../modules/local/gzip/gunzip/main'
+include { GZIP_GUNZIP as GUNZIP_GTF           } from '../../modules/local/gzip/gunzip/main'
 include { GZIP_GUNZIP as GUNZIP_BL_PEAKS      } from '../../modules/local/gzip/gunzip/main'
 include { SAMTOOLS_FAIDX                      } from '../../modules/local/samtools/faidx/main'
 include { SAMTOOLS_FAIDX_CHR                  } from '../../modules/local/samtools/faidx_chr/main'
 include { BOWTIE2_BUILD                       } from '../../modules/local/bowtie2/build/main'
-include { BOWTIE2_BUILD as BOWTIE2_BUILD_MITO } from '../../modules/local/bowtie2/build/main'
+include { UNTAR as UNTAR_BOWTIE2_INDEX        } from '../../modules/nf-core/untar/main'
 
 workflow PREPARE_GENOME {
 	take:
-	genome_fasta
-	chrom_sizes
+	genome_fasta     // string
+	gtf              // string
 	gensz
-	mito_fasta
-	mito_chr_name
 	bowtie2_index
-	bowtie2_mito_index
 	blacklist_peaks
 
 	main:
@@ -27,6 +24,17 @@ workflow PREPARE_GENOME {
 	} else {
 		ch_genome_fasta = channel.value([ [id: file(genome_fasta).simpleName ], file(genome_fasta) ])
 	}
+
+	// unzip gtf file if necessary
+	if (!gtf){
+		ch_gtf = channel.value([[:],[]])
+	} else if (gtf.endsWith('.gz')){
+		GUNZIP_GTF([[id: file(gtf).simpleName ], file(gtf) ])
+		ch_gtf = GUNZIP_GTF.out.gunzip
+	} else {
+		ch_gtf = channel.value([ [id: file(gtf).simpleName ], file(gtf) ])
+	}
+
 	// generate chr sizes file if necessary
 	SAMTOOLS_FAIDX(ch_genome_fasta)
 	ch_genome_fai  = SAMTOOLS_FAIDX.out.fai
@@ -42,39 +50,20 @@ workflow PREPARE_GENOME {
 		ch_gensz = channel.value(gensz)
 	}
 
-	if (!mito_fasta) {
-		ch_genome_fasta
-			.map{meta, fasta -> 
-				meta.id = "${meta.id}.${mito_chr_name}"
-				[meta, fasta]
-			}
-			.set{extract_mito_input}
+	// ----------------------------------------------------------------------- //
+	// Prepare bowtie2 index
+	// ----------------------------------------------------------------------- //
 
-		SAMTOOLS_FAIDX_CHR( extract_mito_input, mito_chr_name)
-		ch_mito_fasta = SAMTOOLS_FAIDX_CHR.out.fasta
-	} else if (mito_fasta.endsWith('.gz')) {
-		GUNZIP_MITO([[id: file(mito_fasta).simpleName ], file(mito_fasta) ])
-		ch_mito_fasta = GUNZIP_GENOME.out.gunzip
-	} else {
-		ch_mito_fasta = channel.value([[id: file(mito_fasta).simpleName ], file(mito_fasta) ])
-	}
-
-	// genome
 	// TODO: The pre-built indices need to be reassessed
+
 	if (!bowtie2_index) {
 		BOWTIE2_BUILD(ch_genome_fasta)
 		ch_bowtie2_index = BOWTIE2_BUILD.out.index
+	} else if ( bowtie2_index.endsWith('.tar.gz') || bowtie2_index.endsWith('.tar') ) {
+		UNTAR_BOWTIE2_INDEX([[id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
+		ch_bowtie2_index = UNTAR.out.untar
 	} else {
 		ch_bowtie2_index = channel.value([ [id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
-	}
-
-	// mitochondrial genome
-
-	if (!bowtie2_mito_index) {
-		BOWTIE2_BUILD_MITO(ch_mito_fasta)
-		ch_bowtie2_mito_index = BOWTIE2_BUILD_MITO.out.index
-	} else {
-		ch_bowtie2_mito_index = channel.value([ [id: file(bowtie2_mito_index).simpleName ], file(bowtie2_mito_index) ])
 	}
 
 	if(blacklist_peaks && blacklist_peaks.endsWith(".gz")) {
@@ -86,15 +75,11 @@ workflow PREPARE_GENOME {
 		ch_blacklist_peaks = channel.value([[:],[]])
 	}
 
-	
-
-	// TODO: update output path comments
 	emit:
-	genome_fasta       = ch_genome_fasta // path(fasta)
-	genome_fai         = ch_genome_fai
-	gensz              = ch_gensz        // int or string
-	mito_fasta         = ch_mito_fasta   // path(fasta)
-	bowtie2_index      = ch_bowtie2_index // path(bowtie2_index)
-	bowtie2_mito_index = ch_bowtie2_mito_index // path(bowtie2_index)
-	blacklist_peaks	   = ch_blacklist_peaks // [ val(meta), path(blacklist_peaks) ]
+	genome_fasta       = ch_genome_fasta    // channel: [ val(meta), path(genome_fasta) ]
+	genome_fai         = ch_genome_fai      // channel: [ val(meta), path(fai) ]
+	gensz              = ch_gensz           // int or string
+	bowtie2_index      = ch_bowtie2_index   // channel: [ val(meta), path(bowtie2_index) ]
+	blacklist_peaks	   = ch_blacklist_peaks // channel: [ val(meta), path(blacklist_peaks) ]
+	gtf                = ch_gtf             // channel: [ val(meta), path(gtf) ]
 }

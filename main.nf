@@ -5,13 +5,6 @@ include { CHIPSEQ } from './workflows/chipseq'
 
 workflow {
 	CHIPSEQ()
-
-	ch_versions = channel
-		.topic("versions")
-		.unique()
-
-	publish:
-	ch_versions >> 'versions/'
 }
 
 output {
