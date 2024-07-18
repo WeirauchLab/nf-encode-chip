@@ -1,3 +1,5 @@
 work/
 tests/
 .nextflow*
+assets/test_data/
+__pycache__
