@@ -1,15 +1,16 @@
-import multiqc
 from multiqc.base_module import BaseMultiqcModule
 import logging
 import glob
 import os
 from multiqc.plots import table
+from multiqc import config
+
 
 log = logging.getLogger("multiqc")
 
 
 class HomerFindMotifsGenome(BaseMultiqcModule):
-    def __init__(self, file_pattern, clean_str="_knownResults.tsv"):
+    def __init__(self):
         super(HomerFindMotifsGenome, self).__init__(
             name="HOMER",
             target="homer",
@@ -17,6 +18,9 @@ class HomerFindMotifsGenome(BaseMultiqcModule):
             href="",
             info="",
         )
+        config_sp = getattr(config.sp, "homer/findMotifsGenome", {})
+        file_pattern = config_sp.get("fn", "data/homer/findMotifsGenome/*.tsv")
+        clean_str = config_sp.get("clean_str", "_knownResults.tsv")
 
         self.data = dict()
         found_files = [f for f in glob.iglob(file_pattern, recursive=True)]
@@ -72,6 +76,8 @@ class HomerFindMotifsGenome(BaseMultiqcModule):
 
         # Create a dictionary from keys and values
         data = dict(zip(keys, values))
+        if "id" in data:
+            del data["id"]
         sample_id = os.path.basename(f).replace(clean_str, "")
         # Add the data to the main dictionary
         self.data[sample_id] = data

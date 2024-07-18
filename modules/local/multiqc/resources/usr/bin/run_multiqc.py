@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import glob
-import json
 import multiqc
 from multiqc.plots import table
 from multiqc.plots import linegraph
@@ -9,6 +8,7 @@ from multiqc import config
 import csv
 import os
 from homer_findmotifsgenome import HomerFindMotifsGenome
+from encode_reproducibility import EncodeReproducibility
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str)
@@ -17,7 +17,6 @@ args = parser.parse_args()
 spp_xcorr_pattern = "data/spp_xcor/*.csv"
 idr_rep_stats_pattern = "data/encode_reproducibility_stats/idr/*.json"
 overlap_rep_stats_pattern = "data/encode_reproducibility_stats/overlap/*.json"
-homer_findmotifsgenome_pattern = "data/homer/findMotifsGenome/*.tsv"
 lib_qc_pattern = "data/lib_qc/*.lib_qc.tsv"
 
 # Load MultiQC config
@@ -127,125 +126,9 @@ spp_xcorr_module.add_section(
 multiqc.report.modules.append(spp_xcorr_module)
 
 # ENCODE IDR statistics
-idr_rep_stats_data = {}
-for rep_stats_file in glob.glob(idr_rep_stats_pattern):
-    with open(rep_stats_file) as f:
-        rep_stats_dict = json.load(f)
-        sample_id = rep_stats_dict["sample"]
-        del rep_stats_dict["sample"]
-        idr_rep_stats_data[sample_id] = rep_stats_dict
+multiqc.report.modules.append(EncodeReproducibility())
 
-idr_rep_stats_plot = table.plot(
-    data=idr_rep_stats_data,
-    pconfig={
-        "id": "encode_reproducibility_stats_idr",
-        "title": "Reproducibility Statistics (IDR)",
-    },
-    headers={
-        "Nt": {"title": "Nt"},
-        "Np": {"title": "Np"},
-        "Conservative Peaks": {"title": "Conservative Peaks"},
-        "Optimal Peaks": {"title": "Optimal Peaks"},
-        "Rescue Ratio": {"title": "Rescue Ratio", "format": "{:,.3f}"},
-        "Consistency Ratio": {
-            "title": "Consistency Ratio",
-            "format": "{:,.3f}",
-        },
-        "Reproducibility": {"title": "Reproducibility"},
-    },
-)
-
-encode_reproducibility_module = multiqc.BaseMultiqcModule(
-    name="Encode Reproducibility",
-    anchor="encode_reproducibility",
-    comment="Reproducibility statistics for ENCODE ChIP-seq samples.",
-)
-encode_reproducibility_module.add_section(
-    name="IDR Statistics",
-    plot=idr_rep_stats_plot,
-    anchor="encode_reproducibility_stats_idr_section",
-    description="""
-**Nt**                = Best no. of peaks passing IDR threshold by comparing
-true replicates\n
-**Np**                = Best no. of peaks passing IDR threshold by comparing
-pseudoreplicates\n
-**Conservative**      = file containing the best peak number when comparing
-true replicate pairs\n
-**Optimal**           = peak file with the most peaks when comparing Nt and Np\n
-**Rescue Ratio**      = max(Nt, Np) / min(Nt, Np)\n
-**Consistency Ratio** = max(Peaks) / min(Peaks)
-""",
-    helptext="""Nt is established by comparing pairs of true replicates against
-    each other and transferring the results to the pooled peak set.
-    If you have 2 replicates, it would just be
-    - 'rep1 vs rep2'
-    if you have 3 or more, it would be:
-    - 'rep1 vs rep2'
-    - 'rep1 vs rep3'
-    - 'rep2 vs rep3'
-    and so on. The comparison the best number of peaks is then selected as Nt.
-    Np is established the same way, but it will only ever have 2 pseudoreps.
-    The rescue ratio is the ratio of these two peak sets and tries to represent
-    how well the pseudoreplicates can recapitulate the true replicates.
-    Consistency ratio estimates how consistent the peak sets are across the
-    replicates. If one replicate has a lot more peaks than the other, this will
-    ratio will increase, which could be indicative of a failed replicate.
-    """,
-)
-
-overlap_rep_stats_data = {}
-for rep_stats_file in glob.glob(overlap_rep_stats_pattern):
-    with open(rep_stats_file) as f:
-        rep_stats_dict = json.load(f)
-        sample_id = rep_stats_dict["sample"]
-        del rep_stats_dict["sample"]
-        overlap_rep_stats_data[sample_id] = rep_stats_dict
-
-overlap_rep_stats_plot = table.plot(
-    data=overlap_rep_stats_data,
-    pconfig={
-        "id": "encode_reproducibility_stats_overlap",
-        "title": "Overlap statistics",
-    },
-    headers={
-        "Nt": {"title": "Nt"},
-        "Np": {"title": "Np"},
-        "Conservative Peaks": {"title": "Conservative Peaks"},
-        "Optimal Peaks": {"title": "Optimal Peaks"},
-        "Rescue Ratio": {"title": "Rescue Ratio", "format": "{:,.3f}"},
-        "Consistency Ratio": {
-            "title": "Consistency Ratio",
-            "format": "{:,.3f}",
-        },
-        "Reproducibility": {"title": "Reproducibility"},
-    },
-)
-
-encode_reproducibility_module.add_section(
-    name="Overlap Statistics",
-    plot=overlap_rep_stats_plot,
-    anchor="encode_reproducibility_stats_overlap_section",
-    description="""
-**Nt**                = Best no. of overlapping peaks when comparing true
-replicates against the pooled replicate\n
-**Np**                = Best no. of overlapping peaks when comparing
-pseudoreplicates against the pooled replicate\n
-**Conservative**      = file containing the best peak number when comparing
-true replicate pairs\n
-**Optimal**           = peak file with the most peaks when comparing
-Nt and Np\n
-**Rescue Ratio**      = max(Nt, Np) / min(Nt, Np)\n
-**Consistency Ratio** = max(Peaks) / min(Peaks)
-""",
-)
-multiqc.report.modules.append(encode_reproducibility_module)
-
-multiqc.report.modules.append(
-    HomerFindMotifsGenome(
-        file_pattern=homer_findmotifsgenome_pattern,
-        clean_str="_knownResults.tsv",
-    )
-)
+multiqc.report.modules.append(HomerFindMotifsGenome())
 
 
 # Write the report

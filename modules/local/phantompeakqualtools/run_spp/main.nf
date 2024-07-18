@@ -26,9 +26,9 @@ process RUN_SPP {
 		| head -n 100 \\
 		| awk 'function abs(v) {return v < 0 ? -v : v} BEGIN{sum=0} {sum+=abs(\$3-\$2)} END{print int(sum/NR)}')
 	
-	if [ "$seq_type" == "tf" ]; then
+	if [ "$seq_type" = "tf" ]; then
 		max=\$((readlen + 10 > 50 ? readlen + 10 : 50))
-	elif [ "$seq_type" == "histone" ]; then
+	elif [ "$seq_type" = "histone" ]; then
 		max=\$((readlen + 10 > 100 ? readlen + 10 : 100))
 	fi
 

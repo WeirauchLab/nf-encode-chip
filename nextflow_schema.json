@@ -92,7 +92,7 @@
                 "blacklist_peaks": {
                     "type": "string",
                     "format": "file-path",
-                    "exists": true,
+                    "exists": false,
                     "description": "Path to blacklist peak file.",
                     "help_text": ""
                 },
