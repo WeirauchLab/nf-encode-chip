@@ -116,6 +116,8 @@ workflow ENCODE_CHIP {
 	bam_filtered_index         = TASK_FILTER.out.bai
 	picard_metrics             = TASK_FILTER.out.picard_metrics
 	filtered_flagstat          = TASK_FILTER.out.flagstat
+	spp                        = TASK_XCORR.out.spp
+	xcorr_csv                  = TASK_XCORR.out.xcorr_csv
 	processed_tagalign         = TASK_TAGALIGN.out.tagAlign
 	narrowPeak                 = TASK_MACS2.out.narrowPeak
 	peaks_filtered             = ch_peaks_filtered

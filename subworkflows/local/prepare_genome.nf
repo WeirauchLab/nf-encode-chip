@@ -1,5 +1,6 @@
 
 include { GZIP_GUNZIP as GUNZIP_GENOME        } from '../../modules/local/gzip/gunzip/main'
+include { GZIP_GUNZIP as GUNZIP_GTF           } from '../../modules/local/gzip/gunzip/main'
 include { GZIP_GUNZIP as GUNZIP_BL_PEAKS      } from '../../modules/local/gzip/gunzip/main'
 include { SAMTOOLS_FAIDX                      } from '../../modules/local/samtools/faidx/main'
 include { SAMTOOLS_FAIDX_CHR                  } from '../../modules/local/samtools/faidx_chr/main'
@@ -9,6 +10,7 @@ include { UNTAR as UNTAR_BOWTIE2_INDEX        } from '../../modules/nf-core/unta
 workflow PREPARE_GENOME {
 	take:
 	genome_fasta     // string
+	gtf              // string
 	gensz
 	bowtie2_index
 	blacklist_peaks
@@ -22,6 +24,17 @@ workflow PREPARE_GENOME {
 	} else {
 		ch_genome_fasta = channel.value([ [id: file(genome_fasta).simpleName ], file(genome_fasta) ])
 	}
+
+	// unzip gtf file if necessary
+	if (!gtf){
+		ch_gtf = channel.value([[:],[]])
+	} else if (gtf.endsWith('.gz')){
+		GUNZIP_GTF([[id: file(gtf).simpleName ], file(gtf) ])
+		ch_gtf = GUNZIP_GTF.out.gunzip
+	} else {
+		ch_gtf = channel.value([ [id: file(gtf).simpleName ], file(gtf) ])
+	}
+
 	// generate chr sizes file if necessary
 	SAMTOOLS_FAIDX(ch_genome_fasta)
 	ch_genome_fai  = SAMTOOLS_FAIDX.out.fai
@@ -68,4 +81,5 @@ workflow PREPARE_GENOME {
 	gensz              = ch_gensz           // int or string
 	bowtie2_index      = ch_bowtie2_index   // channel: [ val(meta), path(bowtie2_index) ]
 	blacklist_peaks	   = ch_blacklist_peaks // channel: [ val(meta), path(blacklist_peaks) ]
+	gtf                = ch_gtf             // channel: [ val(meta), path(gtf) ]
 }

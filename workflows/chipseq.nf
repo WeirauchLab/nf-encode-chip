@@ -4,8 +4,7 @@ include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
 include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
-include { HOMER_FINDMOTIFSGENOME } from "../modules/local/homer/findmotifsgenome/main"
-include { HOMER_POSTPROC_FINDMOTIFSGENOME } from "../modules/local/homer/postproc_findmotifsgenome/main" 
+include { HOMER               } from "../subworkflows/local/homer"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
@@ -24,6 +23,7 @@ workflow CHIPSEQ {
 
 	PREPARE_GENOME(
 		params.fasta,
+		params.gtf,
 		params.gensz,
 		params.bowtie2_index,
 		params.blacklist_peaks
@@ -45,9 +45,6 @@ workflow CHIPSEQ {
 		params.skip_adapter_trimming,
 		params.save_trimmed_fastq
 	)
-	ch_multiqc_fastqc_raw     = PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]}
-	ch_multiqc_fastqc_trimmed = PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]}
-
 
 	ENCODE_CHIP(
 		PREPARE_FASTQ.out.fastq,
@@ -87,16 +84,14 @@ workflow CHIPSEQ {
 		.mix(ENCODE_CHIP.out.idr_reproducible_peaks)
 		.mix(ENCODE_CHIP.out.overlap_reproducible_peaks)
 
-	ch_homer_findmotifsgenome_results = Channel.empty()
-	if(!params.skip_homer_findmotifsgenome) {
-		HOMER_FINDMOTIFSGENOME(
-			ch_homer_peak_inputs,
-			PREPARE_GENOME.out.genome_fasta,
-			params.homer_motif_lib ? file(params.homer_motif_lib) : []
-		)
-		HOMER_POSTPROC_FINDMOTIFSGENOME(HOMER_FINDMOTIFSGENOME.out.knownResults)
-		ch_homer_findmotifsgenome_results = HOMER_POSTPROC_FINDMOTIFSGENOME.out.tsv
-	}
+	HOMER(
+		ch_homer_peak_inputs,
+		PREPARE_GENOME.out.genome_fasta,
+		PREPARE_GENOME.out.gtf,
+		params.homer_motif_lib ? file(params.homer_motif_lib) : [],
+		params.skip_homer_findmotifsgenome,
+		params.skip_homer_annotatepeaks
+	)
 
 	Channel.topic('encode_reproducibility_json')
 		.branch{meta, peak ->
@@ -117,30 +112,27 @@ workflow CHIPSEQ {
 
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],
-		ch_multiqc_fastqc_raw,
-		Channel.topic('fastp_json').collect{it[1]}.ifEmpty{[]},
-		ch_multiqc_fastqc_trimmed,
+		PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]},
+		PREPARE_FASTQ.out.fastp_json.collect{it[1]}.ifEmpty{[]},
+		PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.lib_qc.collect{it[1]}.ifEmpty{[]},
-		Channel.topic('spp_log').collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.spp.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},
-		Channel.topic('spp_xcorr').filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.overlap.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_metrics.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_counts.collect{it[1]}.ifEmpty{[]},
-		ch_homer_findmotifsgenome_results.collect{it[1]}.ifEmpty{[]},
+		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]},
 		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
 	publish:
 	MULTIQC.out >> "multiqc"
-	HOMER_FINDMOTIFSGENOME.out >> "homer/findMotifsGenome/raw"
-	HOMER_POSTPROC_FINDMOTIFSGENOME.out >> "homer/findMotifsGenome/postproc"
-	//DEEPTOOLS_BAMCOVERAGE.out.bigwig >> "deeptools/bamCoverage"
 
 
 }

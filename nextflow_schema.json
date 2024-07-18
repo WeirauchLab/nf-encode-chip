@@ -33,6 +33,12 @@
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
                 },
+                "gtf": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to a .gtf or .gtf.gz file containing genome annotations."
+                },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
@@ -211,6 +217,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Skip HOMER findMotifsGenome.pl."
+                },
+                "skip_homer_annotatepeaks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip HOMER annotatePeaks.pl."
                 },
                 "homer_denovo_enabled": {
                     "type": "boolean",

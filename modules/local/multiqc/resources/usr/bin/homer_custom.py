@@ -32,9 +32,7 @@ class FindMotifsGenomeMixin:
             values = lines[1].strip().split("\t")
 
             if len(keys) != len(values):
-                log.warn(
-                    f"Mismatch in number of keys and values in file {f}. Skipping."
-                )
+                log.warn(f"Mismatch in number of keys and values in file {f}.")
                 continue
 
             data = dict(zip(keys, values))
@@ -85,7 +83,9 @@ class FindMotifsGenomeMixin:
                         "hidden": True,
                         "scale": "Blues",
                         "format": "{:.2e}",
-                        "description": """P-value threshold for enrichment. This is a binned value and is inaccurate past values of 1e-307!""",
+                        "description": """P-value threshold for enrichment.
+                        This is a binned value and is
+                        inaccurate past values of 1e-307!""",
                     },
                     "log_p_value": {
                         "title": "Log P-value",
