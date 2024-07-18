@@ -7,8 +7,9 @@ from multiqc.plots import linegraph
 from multiqc import config
 import csv
 import os
-from homer_findmotifsgenome import HomerFindMotifsGenome
+from homer_custom import Homer
 from encode_reproducibility import EncodeReproducibility
+from spp_xcorr import SppXCorr
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", type=str)
@@ -97,38 +98,13 @@ multiqc.report.modules.append(encode_lib_qc)
 
 
 # ENCODE xcorr
-spp_xcorr_data = {}
-for spp_xcorr_file in glob.glob(spp_xcorr_pattern):
-    with open(spp_xcorr_file) as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row["sample_id"] not in spp_xcorr_data:
-                spp_xcorr_data[row["sample_id"]] = {}
-            spp_xcorr_data[row["sample_id"]][float(row["shift"])] = float(
-                row["correlation"]
-            )
-
-spp_xcorr_plot = linegraph.plot(
-    data=spp_xcorr_data,
-    pconfig={"id": "spp_xcorr_plot", "title": "Cross-Correlation Statistics"},
-)
-
-spp_xcorr_module = multiqc.BaseMultiqcModule(
-    name="Cross-Correlation",
-    anchor="spp_xcorr",
-    comment="Cross correlation",
-)
-spp_xcorr_module.add_section(
-    name="Cross-Correlation Statistics",
-    plot=spp_xcorr_plot,
-    anchor="spp_xcorr_section",
-)
-multiqc.report.modules.append(spp_xcorr_module)
+multiqc.report.modules.append(SppXCorr())
 
 # ENCODE IDR statistics
 multiqc.report.modules.append(EncodeReproducibility())
 
-multiqc.report.modules.append(HomerFindMotifsGenome())
+# Custom HOMER module
+multiqc.report.modules.append(Homer())
 
 
 # Write the report

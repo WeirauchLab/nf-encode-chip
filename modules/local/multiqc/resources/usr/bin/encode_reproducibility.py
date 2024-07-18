@@ -1,4 +1,3 @@
-import multiqc
 from multiqc.base_module import BaseMultiqcModule
 import logging
 import glob
