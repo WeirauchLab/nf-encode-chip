@@ -11,9 +11,9 @@ workflow PREPARE_GENOME {
 	take:
 	genome_fasta     // string
 	gtf              // string
-	gensz
-	bowtie2_index
-	blacklist_peaks
+	gensz            // int or string
+	bowtie2_index    // string
+	blacklist_peaks  // string
 
 	main:
 	

@@ -5,6 +5,7 @@ include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
 include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
 include { HOMER               } from "../subworkflows/local/homer"
+include { UCSC_TRACKHUB       } from "../subworkflows/local/ucsc_trackhub"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
@@ -91,6 +92,12 @@ workflow CHIPSEQ {
 		params.homer_motif_lib ? file(params.homer_motif_lib) : [],
 		params.skip_homer_findmotifsgenome,
 		params.skip_homer_annotatepeaks
+	)
+
+	UCSC_TRACKHUB(
+		ENCODE_CHIP.out.idr_reproducible_peaks,
+		PREPARE_GENOME.out.genome_fai,
+		DEEPTOOLS.out.bigwig,
 	)
 
 	Channel.topic('encode_reproducibility_json')

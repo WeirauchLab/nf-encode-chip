@@ -1,7 +1,7 @@
 process DEEPTOOLS_BAMCOVERAGE {
 	tag "${meta.id}"
-	cpus   = {1 * task.attempt}
-	memory = {16.GB * task.attempt}
+	cpus   = {4 * task.attempt}
+	memory = {12.GB * task.attempt}
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
