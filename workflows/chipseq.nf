@@ -128,6 +128,7 @@ workflow CHIPSEQ {
 		DEEPTOOLS.out.fingerprint_metrics.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_counts.collect{it[1]}.ifEmpty{[]},
 		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]},
+		HOMER.out.annotatePeaks_annStats.collect{it[1]}.ifEmpty{[]},
 		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
