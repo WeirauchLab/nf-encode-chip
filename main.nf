@@ -9,6 +9,7 @@ workflow {
 
 output {
     directory "$params.outdir"
+	mode params.publish_dir_mode
 
 	'encode/tagAlign' {
 		index {

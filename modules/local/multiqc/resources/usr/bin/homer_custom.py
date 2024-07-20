@@ -2,11 +2,69 @@ from multiqc.base_module import BaseMultiqcModule
 import logging
 import glob
 import os
-from multiqc.plots import table
+from multiqc.plots import table, bargraph
 from multiqc import config
 
 
 log = logging.getLogger("multiqc")
+
+
+class AnnStatsMixin:
+    def parse_annstats_data(self):
+        config_sp = getattr(config.sp, "homer/annStats", {})
+        file_pattern = config_sp.get("fn", "data/homer/annStats/*.tsv")
+        clean_str = config_sp.get("clean_str", "_annStats.tsv")
+        files = [f for f in glob.iglob(file_pattern, recursive=True)]
+        log.info("Found {} homer/annStats reports".format(len(files)))
+        peak_data = {}
+        enrichment_data = {}
+        for file in files:
+            log.debug(f"Reading {file}")
+            sample_id = os.path.basename(file).replace(clean_str, "")
+            peak_data[sample_id] = {}
+            enrichment_data[sample_id] = {}
+            with open(file, "r") as fh:
+                next(fh)
+                for line in fh:
+                    value = line.strip().split("\t")
+                    peak_data[sample_id][value[0]] = value[1]
+                    enrichment_data[sample_id][value[0]] = value[3]
+        return [peak_data, enrichment_data]
+
+    def add_annStats_section(self, data):
+        if not data:
+            return
+        self.write_data_file(data, "multiqc_homer_annstats")
+        bar_plot = bargraph.plot(
+            data=data,
+            cats=["Promoter", "Exon", "Intron", "TTS", "Intergenic"],
+            pconfig={
+                "data_labels": [
+                    {
+                        "name": "peaks",
+                        "ylab": "Number of Peaks",
+                        "id": "homer_annstats_peaks",
+                        "title": "Number of Peaks",
+                    },
+                    {
+                        "name": "log2 enrichment",
+                        "ylab": "Log2 Enrichment",
+                        "id": "homer_annstats_enrichment",
+                        "title": "Log2 enrichment",
+                    },
+                ],
+                "id": "homer_annstats_barplot",
+                "title": "HOMER Annotation Statistics",
+            },
+        )
+        self.add_section(
+            name="Annotation Statistics",
+            anchor="homer_custom_annstats",
+            description="""HOMER's `annotatePeaks.pl` calculates the number of
+            peaks and the enrichment of peaks in different regions of the
+            genome.""",
+            plot=bar_plot,
+        )
 
 
 class FindMotifsGenomeMixin:
@@ -142,7 +200,7 @@ class FindMotifsGenomeMixin:
         )
 
 
-class Homer(BaseMultiqcModule, FindMotifsGenomeMixin):
+class Homer(BaseMultiqcModule, FindMotifsGenomeMixin, AnnStatsMixin):
     def __init__(self):
         super(Homer, self).__init__(
             name="HOMER",
@@ -156,3 +214,5 @@ class Homer(BaseMultiqcModule, FindMotifsGenomeMixin):
 
         self.data["findMotifsGenome"] = self.parse_findMotifsGenome_data()
         self.add_findMotifsGenome_section(self.data["findMotifsGenome"])
+        self.data["annStats"] = self.parse_annstats_data()
+        self.add_annStats_section(self.data["annStats"])

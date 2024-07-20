@@ -5,13 +5,14 @@ include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
 include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
 include { HOMER               } from "../subworkflows/local/homer"
+include { TRACKHUBS           } from "../subworkflows/local/trackhubs"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 // Validate input parameters
-// validateParameters()
+validateParameters()
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
@@ -93,6 +94,14 @@ workflow CHIPSEQ {
 		params.skip_homer_annotatepeaks
 	)
 
+	TRACKHUBS(
+		PREPARE_GENOME.out.genome_fai,
+		DEEPTOOLS.out.bigwig,
+		ENCODE_CHIP.out.fc_bigwig.mix(ENCODE_CHIP.out.pval_bigwig),
+		ENCODE_CHIP.out.idr_reproducible_peaks,
+		ENCODE_CHIP.out.overlap_reproducible_peaks
+	)
+
 	Channel.topic('encode_reproducibility_json')
 		.branch{meta, peak ->
 			idr: meta.mode == "idr"
@@ -128,6 +137,7 @@ workflow CHIPSEQ {
 		DEEPTOOLS.out.fingerprint_metrics.collect{it[1]}.ifEmpty{[]},
 		DEEPTOOLS.out.fingerprint_counts.collect{it[1]}.ifEmpty{[]},
 		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]},
+		HOMER.out.annotatePeaks_annStats.collect{it[1]}.ifEmpty{[]},
 		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
