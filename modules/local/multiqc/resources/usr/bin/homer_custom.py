@@ -3,10 +3,12 @@ import logging
 import glob
 import os
 from multiqc.plots import table, bargraph
+
 from multiqc import config
 
 
 log = logging.getLogger("multiqc")
+
 
 
 class AnnStatsMixin:
@@ -201,6 +203,7 @@ class FindMotifsGenomeMixin:
 
 
 class Homer(BaseMultiqcModule, FindMotifsGenomeMixin, AnnStatsMixin):
+
     def __init__(self):
         super(Homer, self).__init__(
             name="HOMER",

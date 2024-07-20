@@ -12,7 +12,7 @@ include { MULTIQC } from "../modules/local/multiqc/main"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 // Validate input parameters
-validateParameters()
+// validateParameters()
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
