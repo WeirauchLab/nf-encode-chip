@@ -7,7 +7,7 @@ process UCSC_TRACKDB {
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
-	container "community.wave.seqera.io/library/python:3.12.3--827621ec7ad46bfc"
+	container "community.wave.seqera.io/library/pydantic_python:ef418a61c42ac2fb"
 
 	input:
 	path "data/bigbed/*"
@@ -25,6 +25,6 @@ process UCSC_TRACKDB {
 	script:
 	def args = task.ext.args ?: ""
 	"""
-	trackdb.py --bigbed --bigwig ${args}
+	trackdb.py --dt_bigwig data/bigwig/* --encode_bigbed data/bigbed/* ${args}
 	"""
 }

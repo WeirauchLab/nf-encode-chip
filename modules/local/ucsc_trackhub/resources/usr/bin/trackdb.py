@@ -1,193 +1,259 @@
 #!/usr/bin/env python
+from pydantic import BaseModel, Field
+from typing import Optional, Union, List
+import os
+from uuid import uuid4
 import argparse
 import logging
-import os
-import glob
-import hashlib
-import base64
-import re
 
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
 )
+
 log = logging.getLogger(__name__)
 
 
-class Hub:
-    def __init__(self, name, genome="<FILL IN>", email="<FILL IN>"):
-        self.name = name
-        self.genome = genome
-        self.email = email
-
-    def parse_hub(self):
-        hub_strings = [
-            f"hub {self.name}",
-            f"shortLabel {self.name[:17]}",
-            f"longLabel {self.name}",
-            "useOneFile on",
-            f"email {self.email}",
-            "",
-            f"genome {self.genome}",
-            "",
-        ]
-        return "\n".join(hub_strings)
+def create_track_hash(length: int = 12) -> str:
+    label = str(uuid4().hex)
+    if not label[0].isalpha():
+        label = "a" + label[1:]
+    return label[:length]
 
 
-class HashMixin:
-    def path_to_alphanum_hash(self, file_path, length=12):
-        # Create a SHA256 hash of the file path
-        hash_object = hashlib.sha256(file_path.encode())
-        hash_digest = hash_object.digest()
-
-        # Use base64 encoding to convert to alphanumeric
-        b64_encoded = base64.b64encode(hash_digest).decode()
-
-        # Remove any non-alphanumeric characters
-        alphanum_hash = "".join(c for c in b64_encoded if c.isalnum())
-
-        # Ensure the hash starts with a letter
-        if not alphanum_hash[0].isalpha():
-            alphanum_hash = "a" + alphanum_hash[1:]
-
-        # Truncate or pad to desired length
-        return alphanum_hash[:length].ljust(length, "a")
+def pad_string_with_char(original_string, total_length, pad_char="#"):
+    original_string = f" {original_string} "
+    original_length = len(original_string)
+    padding_needed = max(total_length - original_length, 0)
+    # Calculate padding for each side
+    left_padding = padding_needed // 2
+    right_padding = padding_needed - left_padding
+    # Create the padded string
+    padded_string = (
+        f"{pad_char * left_padding}{original_string}{pad_char * right_padding}"
+    )
+    return padded_string
 
 
-class Track(HashMixin):
-    def __init__(
-        self,
-        name,
-        big_data_url,
-        track_type,
-        visibility="hide",
-        parent=None,
-        color=None,
-    ):
-        self.name = self.path_to_alphanum_hash(big_data_url, 12)
-        self.big_data_url = big_data_url
-        self.track_type = track_type
-        self.short_label = name[:17]
-        self.long_label = name
-        self.visibility = visibility
-        self.parent = parent
-        self.color = color
+class Track(BaseModel):
+    track: str = Field(default_factory=create_track_hash)
+    bigDataUrl: str
+    visibility: str = "hide"
+    shortLabel: Optional[str] = None
+    longLabel: Optional[str] = None
+    color: Optional[str] = None
+    priority: Optional[float] = None
+    altColor: Optional[str] = None
+    parent: Optional[str] = None
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        file_name = os.path.basename(self.bigDataUrl)
+        if self.shortLabel is None:
+            self.shortLabel = file_name
+        if self.longLabel is None:
+            self.longLabel = file_name
+        self.shortLabel = self.shortLabel[:17]
 
     def parse_track(self):
+        log.info(
+            f"parsing track: {self.track} || type: {self.__class__.__name__}"
+        )
         track_strings = [
-            f"track {self.name}",
-            f"bigDataUrl {self.big_data_url}",
-            f"type {self.track_type}",
-            f"shortLabel {self.short_label}",
-            f"longLabel {self.long_label}",
+            f"track {self.track}",
+            f"bigDataUrl {self.bigDataUrl}",
+            f"shortLabel {self.shortLabel}",
+            f"longLabel {self.longLabel}",
             f"visibility {self.visibility}",
         ]
         if self.parent:
             track_strings.insert(1, f"parent {self.parent}")
-        if self.color:
-            track_strings.append(f"color {self.color}")
-        return "\n".join(track_strings)
+        for key, value in self.model_dump(
+            exclude=[
+                "track",
+                "bigDataUrl",
+                "visibility",
+                "shortLabel",
+                "longLabel",
+                "parent",
+            ]
+        ).items():
+            if value:
+                track_strings.append(f"{key} {value}")
+        if track_strings:
+            track_strings[-1] = track_strings[-1] + "\n"
+        return track_strings
 
-    def set_parent(self, parent):
-        self.parent = parent
+    @property
+    def text(self):
+        return "\n".join(self.parse_track())
 
 
-class SuperTrack:
-    def __init__(self, name):
-        self.name = name
-        self.short_label = name
-        self.long_label = name
-        self.tracks = []
+class BigBedTrack(Track):
+    type: str = "bigBed 3 +"
+    itemRgb: str = "on"
 
-    def parse_track(self):
-        track_strings = [
-            f"track {self.name}",
-            "superTrack on show",
-            f"shortLabel {self.short_label}",
-            f"longLabel {self.long_label}",
-        ]
-        return "\n".join(track_strings)
+    def __init__(self, **data):
+        super().__init__(**data)
 
-    def parse_supertrack(self):
-        supertrack_strings = []
-        supertrack_strings.append(self.parse_track())
-        for track in self.tracks:
-            supertrack_strings.append(track.parse_track())
-        return "\n\n".join(supertrack_strings)
 
-    def add_track(self, track):
-        track.set_parent(self.name)
+class BigWigTrack(Track):
+    type: str = "bigWig"
+    autoscale: str = "on"
+    maxHeightPixels: Optional[str] = "100:16:8"
+    viewLimits: Optional[str] = None
+    alwaysZero: str = "on"
+    graphTypeDefault: str = "bar"
+    smoothingWindow: Union[str, int] = "off"
+    windowingFunction: str = "mean"
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if isinstance(self.smoothingWindow, int) and not (
+            1 <= self.smoothingWindow <= 16
+        ):
+            raise ValueError("smoothingWindow must be between 1 and 16")
+        if isinstance(
+            self.smoothingWindow, str
+        ) and self.smoothingWindow not in ["off", "on"]:
+            raise ValueError(
+                "smoothingWindow must be one of 'off', 'on', or int between 1-16"
+            )
+
+
+class SuperTrack(BaseModel):
+    track: str = Field(default_factory=create_track_hash)
+    superTrack: str = "on show"
+    shortLabel: Optional[str] = None
+    longLabel: Optional[str] = None
+    tracks: List[Union[Track, BigWigTrack]] = []
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.shortLabel is None:
+            self.shortLabel = self.track
+        if self.longLabel is None:
+            self.longLabel = self.shortLabel
+        self.shortLabel = self.shortLabel[:17]
+
+    def add_track(self, track: Track):
+        track.parent = self.track
         self.tracks.append(track)
 
-    def __str__(self):
-        return f"{self.name} {self.label} {self.trackdb}"
+    def parse_track(self):
+        track_strings = []
+        for key, value in self.model_dump(
+            include=["track", "superTrack", "shortLabel", "longLabel"]
+        ).items():
+            if value:
+                track_strings.append(f"{key} {value}")
+        if track_strings:
+            track_strings[-1] = track_strings[-1] + "\n"
+        for track in self.tracks:
+            track_strings.extend(track.parse_track())
+        if track_strings:
+            comment_header = (
+                pad_string_with_char(
+                    original_string=self.track, total_length=72, pad_char="#"
+                )
+                + "\n"
+            )
+            track_strings.insert(0, comment_header)
+            track_strings.append(f"{'#' * 72}\n")
+        return track_strings
+
+    @property
+    def text(self):
+        return "\n".join(self.parse_track())
 
 
-def find_files(pattern):
-    files = [file for file in glob.iglob(pattern, recursive=True)]
-    return files
+class TrackHub(BaseModel):
+    hub: str
+    shortLabel: str = None
+    longLabel: str = None
+    useOneFile: str = "on"
+    email: str = "example@google.com"
+    genome: str = "<FILL IN>"
+    tracks: List[Union[Track, SuperTrack]] = []
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.shortLabel is None:
+            self.shortLabel = self.hub
+        if self.longLabel is None:
+            self.longLabel = self.shortLabel
+        self.shortLabel = self.shortLabel[:17]
 
-def collect_files(directory, pattern="*.bw|*.bigwig"):
-    files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if re.match(pattern, file):
-                files.append(os.path.join(root, file))
-    return files
+    def add_track(self, track: Union[Track, SuperTrack]):
+        self.tracks.append(track)
+
+    def parse_hub(self):
+        hub_strings = [
+            f"hub {self.hub}",
+            f"shortLabel {self.shortLabel}",
+            f"longLabel {self.longLabel}",
+            f"useOneFile {self.useOneFile}",
+            f"email {self.email}",
+            f"\ngenome {self.genome}\n",
+        ]
+        for track in self.tracks:
+            hub_strings.extend(track.parse_track())
+        return hub_strings
+
+    def write_hub_file(self, path: str = "hub.txt"):
+        hub_contents = self.parse_hub()
+        with open(path, "w") as f:
+            log.info(f"writing hub file: {path}")
+            f.write("\n".join(hub_contents))
+
+    @property
+    def text(self):
+        return "\n".join(self.parse_hub())
 
 
 def main(args):
-    track_strings = []
-
-    hub = Hub(name=args.hub, genome=args.genome)
-    track_strings.append(hub.parse_hub())
-
-    if args.bigbed:
-        supertrack = SuperTrack("bigbed_supertrack")
-        files = collect_files("data", "*.bb")
-        for file in files:
-            base_name = os.path.basename(file)
-            file_id = os.path.splitext(base_name)[0]
-            entry = Track(
-                name=file_id, big_data_url=file, track_type="bigBed 6 +"
+    hub = TrackHub(
+        hub=args.hub,
+        genome=args.genome,
+        email=args.email,
+        shortLabel=args.shortLabel,
+        longLabel=args.longLabel,
+    )
+    if args.dt_bigwig:
+        supertrack = SuperTrack(
+            track="deeptools_bigwig",
+            shortLabel="DeepTools BigWigs",
+            longLabel="Signal tracks generated by DeepTools",
+        )
+        for file in args.dt_bigwig:
+            supertrack.add_track(
+                BigWigTrack(bigDataUrl=file, visibility="full", color="0,0,0")
             )
-            supertrack.add_track(entry)
-        track_strings.append("#################################")
-        track_strings.append(supertrack.parse_supertrack())
-    if args.bigwig:
-        supertrack = SuperTrack("bigwig_supertrack")
-        files = collect_files("data", "*.bw|*.bigwig")
-        for file in files:
-            base_name = os.path.basename(file)
-            file_id = os.path.splitext(base_name)[0]
-            entry = Track(name=file_id, big_data_url=file, track_type="bigWig")
-            supertrack.add_track(entry)
-        track_strings.append("#################################")
-        track_strings.append(supertrack.parse_supertrack())
-
-    if track_strings:
-        with open("hub.txt", "w") as f:
-            f.write("\n".join(track_strings))
+        hub.add_track(supertrack)
+    if args.encode_bigbed:
+        supertrack = SuperTrack(
+            track="encode_bigbed",
+            shortLabel="ENCODE Peaks",
+            longLabel="Peaks called by ENCODE",
+        )
+        for file in args.encode_bigbed:
+            supertrack.add_track(
+                BigBedTrack(bigDataUrl=file, visibility="dense", color="0,0,0")
+            )
+        hub.add_track(supertrack)
+    hub.write_hub_file(path=args.output)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Create a trackDb.txt file for a track hub"
-    )
-    parser.add_argument(
-        "--bigwig",
-        action="store_true",
-        default=False,
-        help="enable search for bigwigs",
-    )
-    parser.add_argument(
-        "--bigbed",
-        action="store_true",
-        default=False,
-        help="enable search for bigwigs",
-    )
-    parser.add_argument("--genome", default="<FILL IN>", help="genome name")
-    parser.add_argument("--hub", default="<FILL IN>", help="hub name")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hub", default="TrackHub")
+    parser.add_argument("--genome", default="<FILL IN>")
+    parser.add_argument("--email", default="example@google.com")
+    parser.add_argument("--shortLabel", default="Track Hub")
+    parser.add_argument("--longLabel", default="Track Hub")
+    parser.add_argument("--output", default="hub.txt")
+    parser.add_argument("--dt_bigwig", type=str, nargs="+", default=[])
+    parser.add_argument("--encode_bigbed", type=str, nargs="+", default=[])
     args = parser.parse_args()
 
     main(args)
