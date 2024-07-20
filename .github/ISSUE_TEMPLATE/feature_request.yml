@@ -1,7 +1,7 @@
 name: Feature Request
 description: Suggest a new tool or output that you would like to see in the pipeline.
-title: "[feature request]: "
-labels: ["feature"]
+title: "[enhancement]: "
+labels: ["enhancement"]
 projects: ["WeirauchLab/nf-encode-chip"]
 body:
   - type: markdown
@@ -18,6 +18,11 @@ body:
       placeholder: bedtools
     validations:
       required: true
+  - type: input
+    id: tool_urls
+    attributes:
+      label: Documentation URL
+      description: Provide URLs to documentation / resources for the tools or steps requested.
   - type: textarea
     id: example_usage
     attributes:
