@@ -1,6 +1,5 @@
-process UCSC_TRACKDB {
+process UCSC_TRACKHUB {
 	tag "UCSC Trackhub"
-	cache false
 
 	cpus   = {1 * task.attempt}
 	memory = {16.GB * task.attempt}
@@ -10,21 +9,27 @@ process UCSC_TRACKDB {
 	container "community.wave.seqera.io/library/pydantic_python:ef418a61c42ac2fb"
 
 	input:
-	path "data/bigbed/*"
-	path "data/bigwig/*"
+	path "data/dt_bigwig/*"
+	path "data/encode_bigwig/*"
+	path "data/idr_peaks/*"
+	path "data/overlap_peaks/*"
 
 	output:
-	//TODO: set up output
 	path("data")   , includeInputs: true, optional: true, emit: data
 	path("hub.txt"), optional: true, emit: hub
 
 	// version strings
-	//TODO: add version outputs
-	//tuple val(task.process), val("tool") , eval("tool --version"), topic: versions
+	tuple val(task.process), val("python")     , eval("python --version | sed 's/Python //'"), topic: versions
+	tuple val(task.process), val("trackdb.py") , eval("trackdb.py -v")                       , topic: versions
 
 	script:
 	def args = task.ext.args ?: ""
 	"""
-	trackdb.py --dt_bigwig data/bigwig/* --encode_bigbed data/bigbed/* ${args}
+	trackdb.py \\
+		--dt_bigwig data/dt_bigwig/* \\
+		--encode_bigwig data/encode_bigwig/* \\
+		--idr_peaks data/idr_peaks/* \\
+		--overlap_peaks data/overlap_peaks/* \\
+		${args}
 	"""
 }

@@ -2,8 +2,8 @@ process UCSC_BEDTOBIGBED {
 	tag "${meta.id}"
 
 	cpus   = {1 * task.attempt}
-	memory = {16.GB * task.attempt}
-	time   = {2.h * task.attempt}
+	memory = {8.GB * task.attempt}
+	time   = {1.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/ucsc-bedtobigbed:447--8d104b03cb049be4"
@@ -22,9 +22,13 @@ process UCSC_BEDTOBIGBED {
 	def prefix = task.ext.prefix ?: "${meta.id}"
 	def args = task.ext.args ?: ""
 	"""
-	cut -f1-6 ${bed} | sort -k1,1 -k2,2n > tmp.sorted.bed
+	cut -f1-3 ${bed} | sort -k1,1 -k2,2n > tmp.sorted.bed
 	awk '{print \$1, \$2}' OFS=' ' ${fai} > tmp.chrom.sizes
-	bedToBigBed tmp.sorted.bed tmp.chrom.sizes ${prefix}.bb -tab -type=bed6 ${args}
+	bedToBigBed \\
+		tmp.sorted.bed \\
+		tmp.chrom.sizes \\
+		${prefix}.bb \\
+		${args}
 
 	rm -rf tmp.sorted.bed tmp.chrom.sizes
 	"""

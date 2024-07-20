@@ -119,6 +119,8 @@ workflow ENCODE_CHIP {
 	spp                        = TASK_XCORR.out.spp
 	xcorr_csv                  = TASK_XCORR.out.xcorr_csv
 	processed_tagalign         = TASK_TAGALIGN.out.tagAlign
+	fc_bigwig                  = TASK_MACS2.out.fc_bigwig
+	pval_bigwig                = TASK_MACS2.out.pval_bigwig
 	narrowPeak                 = TASK_MACS2.out.narrowPeak
 	peaks_filtered             = ch_peaks_filtered
 	idr_peaks                  = TASK_REPRODUCIBILITY.out.idr_peaks
