@@ -38,6 +38,7 @@ workflow TASK_MACS2 {
 		ch_gensz,
 		max_peaks
 	)
+	ch_narrowPeak = MACS2_CALLPEAK.out.narrowPeak
 
 	MACS2_CALLPEAK.out.treat_pileup
 		.join(MACS2_CALLPEAK.out.control_lambda, by: 0)
@@ -54,17 +55,19 @@ workflow TASK_MACS2 {
 		ch_bdgcmp_input,
 		ch_faidx
 	)
+	ch_fc_bigwig   = MACS2_BDGCMP.out.fc_bigwig
+	ch_pval_bigwig = MACS2_BDGCMP.out.pval_bigwig
 
 
 	publish:
-	MACS2_CALLPEAK.out.narrowPeak       >> "encode/macs2/raw"
-	MACS2_BDGCMP.out.fc_bigwig          >> "encode/macs2/signal"
-	MACS2_BDGCMP.out.pval_bigwig        >> "encode/macs2/signal"
+	ch_narrowPeak   >> "encode/macs2/raw"
+	ch_fc_bigwig    >> "encode/macs2/signal"
+	ch_pval_bigwig  >> "encode/macs2/signal"
 
 	emit:
-	narrowPeak  = MACS2_CALLPEAK.out.narrowPeak
-	fc_bigwig   = MACS2_BDGCMP.out.fc_bigwig
-	pval_bigwig = MACS2_BDGCMP.out.pval_bigwig
+	narrowPeak  = ch_narrowPeak
+	fc_bigwig   = ch_fc_bigwig
+	pval_bigwig = ch_pval_bigwig
 
 
 }
