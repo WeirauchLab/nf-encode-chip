@@ -45,6 +45,29 @@
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 },
+                "genome": {
+                    "type": "string",
+                    "description": "Name of a genome to use. Fills in other values with presets if those are not supplied."
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address to use for Trackhubs, etc."
+                },
+                "ucsc_trackhub_shortlabel": {
+                    "type": "string",
+                    "default": "ChIP-seq",
+                    "description": "Short label for the UCSC trackhub."
+                },
+                "ucsc_trackhub_longlabel": {
+                    "type": "string",
+                    "default": "ChIP-seq data",
+                    "description": "Long label for the UCSC trackhub."
+                },
+                "ucsc_trackhub_hub": {
+                    "type": "string",
+                    "default": "ChIPTrackHub",
+                    "description": "Hub string to use for UCSC trackhub."
+                },
                 "gensz": {
                     "type": [
                         "integer",
@@ -98,7 +121,6 @@
                 "blacklist_peaks": {
                     "type": "string",
                     "format": "file-path",
-                    "exists": false,
                     "description": "Path to blacklist peak file.",
                     "help_text": ""
                 },
@@ -115,6 +137,11 @@
                     "type": "number",
                     "default": 0.01,
                     "description": "Initial p-value to use for thresholding in MACS2 (ENCODE)."
+                },
+                "encode_macs2_args": {
+                    "type": "string",
+                    "default": "-f BED -p 0.01 --nomodel --shift 0 --keep-dup all -B --SPMR",
+                    "description": "Arguments passed to MACS2 by ENCODE when calling peaks. Fragment length is automatically calculated."
                 },
                 "skip_peak_filtering": {
                     "type": "boolean",
