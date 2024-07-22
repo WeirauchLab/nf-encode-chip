@@ -33,7 +33,7 @@ workflow CHIPSEQ {
 		params.gtf,
 		params.gensz,
 		params.bowtie2_index,
-		params.blacklist_peaks,
+		params.exclusion_peaks,
 		params.save_reference
 	)
 
@@ -63,7 +63,7 @@ workflow CHIPSEQ {
 		params.mapq_threshold ? params.mapq_threshold : [],
 		params.chr_filter ? params.chr_filter : [],
 		params.pseudorep_seed ? params.pseudorep_seed : 0,
-		PREPARE_GENOME.out.blacklist_peaks,
+		PREPARE_GENOME.out.exclusion_peaks,
 		params.idr_threshold_col ? params.idr_threshold_col : "p.value",
 		params.idr_threshold ? params.idr_threshold : 0.05,
 		params.mito_chr_name ?: [],
@@ -71,7 +71,14 @@ workflow CHIPSEQ {
 		params.skip_align,
 		params.skip_peak_filtering,
 		params.skip_idr,
-		params.skip_overlap
+		params.skip_overlap,
+		params.aligner,
+		params.skip_low_mapq_filter,
+		params.skip_rm_duplicates,
+		params.save_filtered_bam,
+		params.skip_pseudoreplication,
+		params.save_tagalign,
+		params.encode_max_macs2_peaks
 	)
 
 	DEEPTOOLS(

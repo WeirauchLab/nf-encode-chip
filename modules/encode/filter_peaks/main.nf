@@ -9,7 +9,7 @@ process FILTER_PEAKS {
 
 	input:
 	tuple val(meta), path(narrowPeak)
-	tuple val(meta2), path(bl_peaks)
+	tuple val(meta2), path(exclusion_peaks)
 	val filter_pattern
 
 	output:
@@ -18,10 +18,10 @@ process FILTER_PEAKS {
 	tuple val(task.process), val("grep")    , eval("grep --version | head -n 1 | sed 's/grep (GNU grep) //'")       , topic: versions
 
 	script:
-	def prefix = task.ext.prefix ?: "${meta.id}.bl_filt"
+	def prefix = task.ext.prefix ?: "${meta.id}.excl_filt"
 	def args = task.ext.args ?: ""
 	"""
-	bedtools intersect -a ${narrowPeak} -b ${bl_peaks} -v > ${prefix}.narrowPeak
+	bedtools intersect -a ${narrowPeak} -b ${exclusion_peaks} -v > ${prefix}.narrowPeak
 
 	if [[ -n '$filter_pattern' ]]; then
 		echo "Retaining peaks matching pattern '${filter_pattern}'"

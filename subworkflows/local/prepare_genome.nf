@@ -13,7 +13,7 @@ workflow PREPARE_GENOME {
 	gtf              // string
 	gensz            // int or string
 	bowtie2_index    // string
-	blacklist_peaks  // string
+	exclusion_peaks  // string
 	save_reference   // boolean
 
 	main:
@@ -55,8 +55,6 @@ workflow PREPARE_GENOME {
 	// Prepare bowtie2 index
 	// ----------------------------------------------------------------------- //
 
-	// TODO: The pre-built indices need to be reassessed
-
 	if (!bowtie2_index) {
 		BOWTIE2_BUILD(ch_genome_fasta)
 		ch_bowtie2_index = BOWTIE2_BUILD.out.index
@@ -67,13 +65,13 @@ workflow PREPARE_GENOME {
 		ch_bowtie2_index = channel.value([ [id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
 	}
 
-	if(blacklist_peaks && blacklist_peaks.endsWith(".gz")) {
-		GUNZIP_BL_PEAKS([[id: file(blacklist_peaks).simpleName ], file(blacklist_peaks) ])
-		ch_blacklist_peaks = GUNZIP_BL_PEAKS.out.gunzip
-	} else if (blacklist_peaks) {
-		ch_blacklist_peaks = channel.value([ [id: file(blacklist_peaks).simpleName ], file(blacklist_peaks) ])
+	if(exclusion_peaks && exclusion_peaks.endsWith(".gz")) {
+		GUNZIP_BL_PEAKS([[id: file(exclusion_peaks).simpleName ], file(exclusion_peaks) ])
+		ch_exclusion_peaks = GUNZIP_BL_PEAKS.out.gunzip
+	} else if (exclusion_peaks) {
+		ch_exclusion_peaks = channel.value([ [id: file(exclusion_peaks).simpleName ], file(exclusion_peaks) ])
 	} else {
-		ch_blacklist_peaks = channel.value([[:],[]])
+		ch_exclusion_peaks = channel.value([[:],[]])
 	}
 
 	emit:
@@ -81,7 +79,7 @@ workflow PREPARE_GENOME {
 	genome_fai         = ch_genome_fai      // channel: [ val(meta), path(fai) ]
 	gensz              = ch_gensz           // int or string
 	bowtie2_index      = ch_bowtie2_index   // channel: [ val(meta), path(bowtie2_index) ]
-	blacklist_peaks	   = ch_blacklist_peaks // channel: [ val(meta), path(blacklist_peaks) ]
+	exclusion_peaks	   = ch_exclusion_peaks // channel: [ val(meta), path(exclusion_peaks) ]
 	gtf                = ch_gtf             // channel: [ val(meta), path(gtf) ]
 
 	publish:
