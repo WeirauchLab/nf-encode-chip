@@ -14,6 +14,7 @@ workflow PREPARE_GENOME {
 	gensz            // int or string
 	bowtie2_index    // string
 	blacklist_peaks  // string
+	save_reference   // boolean
 
 	main:
 	
@@ -82,4 +83,7 @@ workflow PREPARE_GENOME {
 	bowtie2_index      = ch_bowtie2_index   // channel: [ val(meta), path(bowtie2_index) ]
 	blacklist_peaks	   = ch_blacklist_peaks // channel: [ val(meta), path(blacklist_peaks) ]
 	gtf                = ch_gtf             // channel: [ val(meta), path(gtf) ]
+
+	publish:
+	ch_bowtie2_index >> (save_reference ? "genome/bowtie2" : null)
 }

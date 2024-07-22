@@ -8,13 +8,14 @@ workflow TASK_ALIGN {
 	ch_fasta // [ val(meta), path(fasta) ]
 	aligner // "bowtie2"
 	bowtie2_index // [ val(meta), path(index) ] OR []
+	skip_align // boolean
 
 	main:
 	ch_bam = Channel.empty()
 	ch_bai = Channel.empty()
 	ch_bowtie2_log = Channel.empty()
 
-	if(aligner == "bowtie2") {
+	if(!skip_align && aligner == "bowtie2") {
 		BOWTIE2_ALIGN(
 			ch_fastq,
 			ch_fasta,

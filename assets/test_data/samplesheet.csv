@@ -1,5 +1,3 @@
 id,group,fastq_1,fastq_2
-ENCFF000VUU_1M,CTCF,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF000VUU_1M.fastq.gz,
-ENCFF000VUW_1M,CTCF,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF000VUW_1M.fastq.gz,
-ENCFF582JDA_1M,CTCF_PAIRED_1M,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF582JDA_1M_1.fastq.gz,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF582JDA_1M_2.fastq.gz
-ENCFF741YSW_1M,CTCF_PAIRED_1M,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF741YSW_500K_1.fastq.gz,/home/andrew/repositories/nf-encode-chip2/assets/test_data/ENCFF741YSW_500K_2.fastq.gz
+ENCFF037QRA_subset,CTCF,https://raw.githubusercontent.com/andvon/test_datasets/nf-encode-chip/data/fastq/ENCFF037QRA_subset.fastq.gz,
+ENCFF869TVW_subset,CTCF,https://raw.githubusercontent.com/andvon/test_datasets/nf-encode-chip/data/fastq/ENCFF869TVW_subset.fastq.gz,

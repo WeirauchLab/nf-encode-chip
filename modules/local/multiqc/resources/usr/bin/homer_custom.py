@@ -10,7 +10,6 @@ from multiqc import config
 log = logging.getLogger("multiqc")
 
 
-
 class AnnStatsMixin:
     def parse_annstats_data(self):
         config_sp = getattr(config.sp, "homer/annStats", {})
@@ -216,6 +215,8 @@ class Homer(BaseMultiqcModule, FindMotifsGenomeMixin, AnnStatsMixin):
         self.data = {}
 
         self.data["findMotifsGenome"] = self.parse_findMotifsGenome_data()
-        self.add_findMotifsGenome_section(self.data["findMotifsGenome"])
+        if self.data["findMotifsGenome"]:
+            self.add_findMotifsGenome_section(self.data["findMotifsGenome"])
         self.data["annStats"] = self.parse_annstats_data()
-        self.add_annStats_section(self.data["annStats"])
+        if self.data["annStats"]:
+            self.add_annStats_section(self.data["annStats"])
