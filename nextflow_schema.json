@@ -163,6 +163,11 @@
                     "default": 0.05,
                     "description": "IDR threshold to use."
                 },
+                "skip_align": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skips read alignment."
+                },
                 "skip_idr": {
                     "type": "boolean",
                     "default": false,

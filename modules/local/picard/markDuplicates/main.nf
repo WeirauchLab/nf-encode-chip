@@ -5,7 +5,7 @@ process PICARD_MARKDUPLICATES {
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
-	container "biocontainers/picard:3.1.1--hdfd78af_0"
+	container "quay.io/biocontainers/picard:3.1.1--hdfd78af_0"
 
 	input:
 	tuple val(meta), path(bam)

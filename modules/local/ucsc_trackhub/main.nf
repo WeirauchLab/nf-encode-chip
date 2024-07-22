@@ -26,10 +26,10 @@ process UCSC_TRACKHUB {
 	def args = task.ext.args ?: ""
 	"""
 	trackdb.py \\
-		--dt_bigwig data/dt_bigwig/* \\
-		--encode_bigwig data/encode_bigwig/* \\
-		--idr_peaks data/idr_peaks/* \\
-		--overlap_peaks data/overlap_peaks/* \\
+		--dt_bigwig 'data/dt_bigwig/*' \\
+		--encode_bigwig 'data/encode_bigwig/*' \\
+		--idr_peaks 'data/idr_peaks/*' \\
+		--overlap_peaks 'data/overlap_peaks/*' \\
 		${args}
 	"""
 }

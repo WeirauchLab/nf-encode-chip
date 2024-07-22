@@ -12,11 +12,18 @@ include { MULTIQC } from "../modules/local/multiqc/main"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 // Validate input parameters
-// validateParameters()
+validateParameters()
+// Update any params if necessary
+
+if (!workflow.containerEngine && params.homer_log2_mode) {
+	log.warn "homer log2 mode specified, but no container engine specified. Setting to false."
+	params.homer_log2_mode = false
+}
+
 // Print summary of supplied parameters
-log.info paramsSummaryLog(workflow)
 
 workflow CHIPSEQ {
+	log.info paramsSummaryLog(workflow)
 
 	// ------------------------
 	// INPUTS
@@ -27,7 +34,8 @@ workflow CHIPSEQ {
 		params.gtf,
 		params.gensz,
 		params.bowtie2_index,
-		params.blacklist_peaks
+		params.blacklist_peaks,
+		params.save_reference
 	)
 
 	Channel
@@ -61,9 +69,10 @@ workflow CHIPSEQ {
 		params.idr_threshold ? params.idr_threshold : 0.05,
 		params.mito_chr_name ?: [],
 		params.chip_mode ?: "tf",
-		params.skip_peak_filtering ?: false,
-		params.skip_idr ?: false,
-		params.skip_overlap ?: false
+		params.skip_align,
+		params.skip_peak_filtering,
+		params.skip_idr,
+		params.skip_overlap
 	)
 
 	DEEPTOOLS(

@@ -31,6 +31,7 @@ workflow ENCODE_CHIP {
 	ch_idr_threshold
 	ch_mito_chr_name
 	ch_chip_mode
+	skip_align
 	skip_peak_filtering
 	skip_idr
 	skip_overlap
@@ -41,7 +42,8 @@ workflow ENCODE_CHIP {
 		ch_fastq,
 		ch_fasta,
 		"bowtie2",
-		ch_bowtie2_index
+		ch_bowtie2_index,
+		skip_align
 	)
 	ch_bam_aligned       = TASK_ALIGN.out.bam
 	ch_bam_aligned_index = TASK_ALIGN.out.bai
