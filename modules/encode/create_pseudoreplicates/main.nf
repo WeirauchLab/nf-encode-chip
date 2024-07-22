@@ -27,6 +27,7 @@ process CREATE_PSEUDOREPS {
 		--tagAlign ${tagAlign} \\
 		--prefix ${prefix} \\
 		--chunk_size ${chunk_size} \\
-		${paired_end_arg}
+		${paired_end_arg} \\
+		${args}
 	"""
 }

@@ -11,6 +11,8 @@ log = logging.getLogger(__name__)
 
 
 def main(args):
+    log.info(f"Setting random seed to: {args.seed}")
+    random.seed(args.seed)
     pr1 = f"{args.prefix}_pr1.tagAlign.gz"
     pr2 = f"{args.prefix}_pr2.tagAlign.gz"
     total_lines = 0
@@ -64,6 +66,12 @@ if __name__ == "__main__":
         "--paired_end",
         action="store_true",
         help="Flag to indicate paired-end mode",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed to use for reproducibility",
     )
     args = parser.parse_args()
     main(args)
