@@ -9,22 +9,22 @@ include { TRACKHUBS           } from "../subworkflows/local/trackhubs"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 
-
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
+
+if (!workflow.containerEngine && params.homer_log2_mode) {
+	error("ERROR: homer log2 mode specified, but no container engine is used. This option can only be set when using Docker / Singularity / Apptainer.")
+}
+
 // Validate input parameters
 validateParameters()
 // Update any params if necessary
 
-if (!workflow.containerEngine && params.homer_log2_mode) {
-	log.warn "homer log2 mode specified, but no container engine specified. Setting to false."
-	params.homer_log2_mode = false
-}
 
 // Print summary of supplied parameters
+log.info paramsSummaryLog(workflow)
 
 workflow CHIPSEQ {
-	log.info paramsSummaryLog(workflow)
-
+	println params.homer_log2_mode
 	// ------------------------
 	// INPUTS
 	// ------------------------
