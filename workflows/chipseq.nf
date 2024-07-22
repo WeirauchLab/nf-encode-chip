@@ -24,7 +24,6 @@ validateParameters()
 log.info paramsSummaryLog(workflow)
 
 workflow CHIPSEQ {
-	println params.homer_log2_mode
 	// ------------------------
 	// INPUTS
 	// ------------------------

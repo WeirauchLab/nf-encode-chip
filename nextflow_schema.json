@@ -138,7 +138,7 @@
                     "default": 0.01,
                     "description": "Initial p-value to use for thresholding in MACS2 (ENCODE)."
                 },
-                "encode_macs2_args": {
+                "encode_macs2_ext_args": {
                     "type": "string",
                     "default": "-f BED -p 0.01 --nomodel --shift 0 --keep-dup all -B --SPMR",
                     "description": "Arguments passed to MACS2 by ENCODE when calling peaks. Fragment length is automatically calculated."
@@ -221,6 +221,11 @@
                     "exists": true,
                     "description": "Path folder or tar file containing kraken2 database."
                 },
+                "kraken2_ext_args": {
+                    "type": "string",
+                    "default": "--output - --report-minimizer-data --use-names",
+                    "description": "Additional arguments to pass to kraken2."
+                },
                 "skip_kraken2": {
                     "type": "boolean",
                     "default": false,
@@ -240,9 +245,9 @@
                     "exists": true,
                     "description": "Path folder or tar file containing sourmash database."
                 },
-                "sourmash_params": {
+                "sourmash_ext_args": {
                     "type": "string",
-                    "default": "abund",
+                    "default": "-p abund",
                     "description": "Additional parameters to pass to sourmash"
                 },
                 "skip_homer_findmotifsgenome": {
@@ -255,11 +260,6 @@
                     "default": false,
                     "description": "Skip HOMER annotatePeaks.pl."
                 },
-                "homer_denovo_enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable denovo motif finding for HOMER."
-                },
                 "homer_log2_mode": {
                     "type": "boolean",
                     "default": false,
@@ -270,6 +270,11 @@
                     "format": "file-path",
                     "exists": true,
                     "description": "Path to motif library to use for HOMER."
+                },
+                "homer_findmotifsgenome_ext_args": {
+                    "type": "string",
+                    "default": "-size given -nomotif",
+                    "description": "Additional arguments to pass to HOMER findMotifsGenome.pl."
                 },
                 "multiqc_config": {
                     "type": "string",
