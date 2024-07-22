@@ -1,5 +1,8 @@
 process KRAKEN2_KRAKEN2 {
 	tag "${meta.id}"
+	cpus   = {6 * task.attempt}
+	memory = {80.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/kraken2:2.1.3--517e0e9dce07cd35"
