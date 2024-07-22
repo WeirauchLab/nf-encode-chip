@@ -1,4 +1,5 @@
 work/
-tests/
+test_results/
 .nextflow*
 __pycache__
+.nf-test*
