@@ -26,7 +26,7 @@ workflow ENCODE_CHIP {
 	mapq_threshold
 	ch_chr_filter
 	pseudorep_seed
-	ch_blacklist_peaks
+	ch_exclusion_peaks
 	ch_idr_threshold_col
 	ch_idr_threshold
 	ch_mito_chr_name
@@ -35,13 +35,20 @@ workflow ENCODE_CHIP {
 	skip_peak_filtering
 	skip_idr
 	skip_overlap
+	aligner
+	skip_low_mapq_filter
+	skip_rm_duplicates
+	save_filtered_bam
+	skip_pseudoreplication
+	save_tagalign
+	max_peaks
 
 	main:
 
 	TASK_ALIGN(
 		ch_fastq,
 		ch_fasta,
-		"bowtie2",
+		aligner,
 		ch_bowtie2_index,
 		skip_align
 	)
@@ -53,9 +60,9 @@ workflow ENCODE_CHIP {
 		ch_bam_aligned,
 		mapq_threshold,
 		"picard",
-		false,
-		false,
-		true
+		skip_low_mapq_filter,
+		skip_rm_duplicates,
+		save_filtered_bam
 	)
 	ch_filtered_bam = TASK_FILTER.out.bam
 	ch_filtered_bam_bai = TASK_FILTER.out.bam.join(TASK_FILTER.out.bai, by: 0)
@@ -67,8 +74,8 @@ workflow ENCODE_CHIP {
 	TASK_TAGALIGN(
 		TASK_FILTER.out.bam,
 		pseudorep_seed,
-		false,
-		true
+		skip_pseudoreplication,
+		save_tagalign
 	)
 	TASK_XCORR(
 		TASK_TAGALIGN.out.tagAlign,
@@ -80,7 +87,7 @@ workflow ENCODE_CHIP {
 		TASK_XCORR.out.tagAlign,
 		ch_fai,
 		ch_gensz,
-		0
+		max_peaks
 	)
 
 	// TASK postproc_peaks
@@ -89,7 +96,7 @@ workflow ENCODE_CHIP {
 	} else {
 		FILTER_PEAKS(
 			TASK_MACS2.out.narrowPeak,
-			ch_blacklist_peaks,
+			ch_exclusion_peaks,
 			ch_chr_filter
 		)
 		ch_peaks_filtered = FILTER_PEAKS.out.narrowPeak

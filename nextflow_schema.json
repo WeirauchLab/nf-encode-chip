@@ -26,6 +26,12 @@
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row.",
                     "fa_icon": "fas fa-file-csv"
                 },
+                "outdir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+                    "fa_icon": "fas fa-folder-open"
+                },
                 "fasta": {
                     "type": "string",
                     "format": "file-path",
@@ -33,54 +39,15 @@
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
                 },
+                "genome": {
+                    "type": "string",
+                    "description": "Name of a genome to use. Fills in other values with presets if those are not supplied."
+                },
                 "gtf": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
                     "description": "Path to a .gtf or .gtf.gz file containing genome annotations."
-                },
-                "outdir": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
-                    "fa_icon": "fas fa-folder-open"
-                },
-                "genome": {
-                    "type": "string",
-                    "description": "Name of a genome to use. Fills in other values with presets if those are not supplied."
-                },
-                "email": {
-                    "type": "string",
-                    "description": "Email address to use for Trackhubs, etc."
-                },
-                "ucsc_trackhub_shortlabel": {
-                    "type": "string",
-                    "default": "ChIP-seq",
-                    "description": "Short label for the UCSC trackhub."
-                },
-                "ucsc_trackhub_longlabel": {
-                    "type": "string",
-                    "default": "ChIP-seq data",
-                    "description": "Long label for the UCSC trackhub."
-                },
-                "ucsc_trackhub_hub": {
-                    "type": "string",
-                    "default": "ChIPTrackHub",
-                    "description": "Hub string to use for UCSC trackhub."
-                },
-                "gensz": {
-                    "type": [
-                        "integer",
-                        "string"
-                    ],
-                    "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure."
-                },
-                "mito_fasta": {
-                    "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
                 },
                 "mito_chr_name": {
                     "type": "string",
@@ -102,6 +69,71 @@
                     "description": "Pseudoreplication seed.",
                     "help_text": "Pseudoreplication seed."
                 },
+                "exclusion_peaks": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Path to exclusion peak file.",
+                    "help_text": ""
+                },
+                "save_reference": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save genome files like indices."
+                }
+            }
+        },
+        "fastq_options": {
+            "title": "FASTQ-related options",
+            "type": "object",
+            "description": "",
+            "properties": {
+                "skip_adapter_trimming": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables adapter trimming."
+                },
+                "save_trimmed_fastq": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save fastq files after trimming."
+                }
+            }
+        },
+        "encode_options": {
+            "title": "ENCODE options",
+            "type": "object",
+            "description": "Options for ENCODE that don't fit in other places.",
+            "properties": {
+                "chip_mode": {
+                    "type": "string",
+                    "default": "tf",
+                    "enum": [
+                        "tf",
+                        "histone"
+                    ],
+                    "description": "The mode to use for ENCODE."
+                }
+            }
+        },
+        "alignment_options": {
+            "title": "Alignment options",
+            "type": "object",
+            "description": "Options related to read alignment.",
+            "properties": {
+                "aligner": {
+                    "type": "string",
+                    "default": "bowtie2",
+                    "enum": [
+                        "bowtie2"
+                    ],
+                    "description": "The aligner to use for read alignment.",
+                    "help_text": "The aligner to use for read alignment. Currently only bowtie2."
+                },
+                "skip_align": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skips read alignment."
+                },
                 "local_mode": {
                     "type": "boolean",
                     "default": false,
@@ -113,32 +145,51 @@
                     "default": 30,
                     "description": "MAPQ threshold to apply for alignment filtering."
                 },
-                "chr_filter": {
-                    "type": "string",
-                    "default": "chr[0-9XY]+",
-                    "description": "Regex string to apply to peaks."
+                "skip_low_mapq_filter": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables filtering of low MAPQ reads."
                 },
-                "blacklist_peaks": {
-                    "type": "string",
-                    "format": "file-path",
-                    "description": "Path to blacklist peak file.",
-                    "help_text": ""
+                "skip_rm_duplicates": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables filtering of duplicated reads."
                 },
-                "chip_mode": {
-                    "type": "string",
-                    "default": "tf",
-                    "enum": [
-                        "tf",
-                        "histone"
+                "save_filtered_bam": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save filtered BAM files."
+                },
+                "skip_pseudoreplication": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Disables pseudoreplicate analysis."
+                },
+                "save_tagalign": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save tagAlign files."
+                }
+            }
+        },
+        "encode_peak_options": {
+            "title": "Options for ENCODE-style peak analysis",
+            "type": "object",
+            "description": "Options for ENCODE-style peak calling.",
+            "properties": {
+                "gensz": {
+                    "type": [
+                        "integer",
+                        "string"
                     ],
-                    "description": "Regex string to apply to peaks."
+                    "description": "Size of the mappable genome to use for MACS2. Can be a string (hs, mm) or int"
                 },
                 "encode_macs2_pthresh": {
                     "type": "number",
                     "default": 0.01,
                     "description": "Initial p-value to use for thresholding in MACS2 (ENCODE)."
                 },
-                "encode_macs2_args": {
+                "encode_macs2_ext_args": {
                     "type": "string",
                     "default": "-f BED -p 0.01 --nomodel --shift 0 --keep-dup all -B --SPMR",
                     "description": "Arguments passed to MACS2 by ENCODE when calling peaks. Fragment length is automatically calculated."
@@ -148,6 +199,24 @@
                     "default": false,
                     "description": "Disables peak postprocessing."
                 },
+                "chr_filter": {
+                    "type": "string",
+                    "default": "chr[0-9XY]+",
+                    "description": "Regex string to apply to peaks."
+                },
+                "encode_max_macs2_peaks": {
+                    "type": "integer",
+                    "default": 500000,
+                    "description": "Maximum number of peaks to keep after calling peaks.",
+                    "help_text": "Setting this to 0 will disable this cutoff."
+                }
+            }
+        },
+        "encode_reproducibility_options": {
+            "title": "ENCODE Reproducibility options",
+            "type": "object",
+            "description": "Options related to reproducibility analysis of peak files.",
+            "properties": {
                 "idr_threshold_col": {
                     "type": "string",
                     "default": "p.value",
@@ -156,17 +225,12 @@
                         "signal.value",
                         "q.value"
                     ],
-                    "description": "Regex string to apply to peaks."
+                    "description": "The narrowPeak column to use for IDR thresholding."
                 },
                 "idr_threshold": {
                     "type": "number",
                     "default": 0.05,
                     "description": "IDR threshold to use."
-                },
-                "skip_align": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skips read alignment."
                 },
                 "skip_idr": {
                     "type": "boolean",
@@ -177,41 +241,47 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Disables peak overlap analysis."
-                },
-                "skip_adapter_trimming": {
+                }
+            }
+        },
+        "homer_options": {
+            "title": "HOMER options",
+            "type": "object",
+            "description": "Options for HOMER motif analysis.",
+            "properties": {
+                "skip_homer_findmotifsgenome": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Disables adapter trimming."
+                    "description": "Skip HOMER findMotifsGenome.pl."
                 },
-                "save_reference": {
+                "skip_homer_annotatepeaks": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Save genome files like indices."
+                    "description": "Skip HOMER annotatePeaks.pl."
                 },
-                "save_trimmed_fastq": {
+                "homer_log2_mode": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Save fastq files after trimming."
+                    "description": "Use log2-based scoring for HOMER."
                 },
-                "bamcoverage_binsize": {
-                    "type": "integer",
-                    "default": 10,
-                    "description": "bin size to use for bamCoverage."
-                },
-                "bamcoverage_normalize": {
+                "homer_motif_lib": {
                     "type": "string",
-                    "default": "CPM",
-                    "enum": [
-                        "CPM",
-                        "BPM"
-                    ],
-                    "description": "Normalization method to use for bamCoverage."
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Path to motif library to use for HOMER."
                 },
-                "skip_bamcoverage": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip bamCoverage."
-                },
+                "homer_findmotifsgenome_ext_args": {
+                    "type": "string",
+                    "default": "-size given -nomotif",
+                    "description": "Additional arguments to pass to HOMER findMotifsGenome.pl."
+                }
+            }
+        },
+        "metagenomics_options": {
+            "title": "Metagenomics options",
+            "type": "object",
+            "description": "Options for metagenomics analysis.",
+            "properties": {
                 "kraken2_db": {
                     "type": "string",
                     "format": [
@@ -220,6 +290,11 @@
                     ],
                     "exists": true,
                     "description": "Path folder or tar file containing kraken2 database."
+                },
+                "kraken2_ext_args": {
+                    "type": "string",
+                    "default": "--output - --report-minimizer-data --use-names",
+                    "description": "Additional arguments to pass to kraken2."
                 },
                 "skip_kraken2": {
                     "type": "boolean",
@@ -240,44 +315,86 @@
                     "exists": true,
                     "description": "Path folder or tar file containing sourmash database."
                 },
-                "sourmash_params": {
+                "sourmash_ext_args": {
                     "type": "string",
-                    "default": "abund",
+                    "default": "-p abund",
                     "description": "Additional parameters to pass to sourmash"
-                },
-                "skip_homer_findmotifsgenome": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip HOMER findMotifsGenome.pl."
-                },
-                "skip_homer_annotatepeaks": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip HOMER annotatePeaks.pl."
-                },
-                "homer_denovo_enabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enable denovo motif finding for HOMER."
-                },
-                "homer_log2_mode": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Use log2-based scoring for HOMER."
-                },
-                "homer_motif_lib": {
+                }
+            }
+        },
+        "trackhub_options": {
+            "title": "Track Hub options",
+            "type": "object",
+            "description": "Track Hub options for UCSC, etc.",
+            "properties": {
+                "ucsc_trackhub_shortlabel": {
                     "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "description": "Path to motif library to use for HOMER."
+                    "default": "ChIP-seq",
+                    "description": "Short label for the UCSC trackhub."
                 },
+                "ucsc_trackhub_longlabel": {
+                    "type": "string",
+                    "default": "ChIP-seq data",
+                    "description": "Long label for the UCSC trackhub."
+                },
+                "ucsc_trackhub_hub": {
+                    "type": "string",
+                    "default": "ChIPTrackHub",
+                    "description": "Hub string to use for UCSC trackhub.",
+                    "pattern": "^[a-zA-Z0-9]+$"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address to use for Trackhubs, etc.",
+                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
+                }
+            }
+        },
+        "deeptools_options": {
+            "title": "DeepTools options",
+            "type": "object",
+            "description": "Options for DeepTools signal processing and analysis",
+            "properties": {
+                "bamcoverage_binsize": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "bin size to use for bamCoverage."
+                },
+                "bamcoverage_normalize": {
+                    "type": "string",
+                    "default": "CPM",
+                    "enum": [
+                        "CPM",
+                        "BPM"
+                    ],
+                    "description": "Normalization method to use for bamCoverage."
+                },
+                "skip_bamcoverage": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip bamCoverage."
+                }
+            }
+        },
+        "multiqc_options": {
+            "title": "MultiQC options",
+            "type": "object",
+            "description": "Options for MultiQC report generation.",
+            "properties": {
                 "multiqc_config": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
                     "description": "Path to multiqc config file.",
                     "default": "${projectDir}/assets/multiqc_config.yaml"
-                },
+                }
+            }
+        },
+        "process_options": {
+            "title": "Process options",
+            "type": "object",
+            "description": "Options for process execution.",
+            "properties": {
                 "max_cpus": {
                     "type": "integer",
                     "default": 100,
