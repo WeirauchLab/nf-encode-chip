@@ -105,8 +105,8 @@ class BigBedTrack(Track):
 
 class BigWigTrack(Track):
     type: str = "bigWig"
-    autoscale: str = "on"
-    maxHeightPixels: Optional[str] = "100:16:8"
+    autoScale: str = "on"
+    maxHeightPixels: Optional[str] = "128:35:11"
     viewLimits: Optional[str] = None
     alwaysZero: str = "on"
     graphTypeDefault: str = "bar"
