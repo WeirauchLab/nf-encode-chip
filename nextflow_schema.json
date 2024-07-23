@@ -169,6 +169,15 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Save tagAlign files."
+                },
+                "markdup_method": {
+                    "type": "string",
+                    "default": "sambamba",
+                    "enum": [
+                        "sambamba",
+                        "picard"
+                    ],
+                    "description": "Method to use for marking duplicates."
                 }
             }
         },

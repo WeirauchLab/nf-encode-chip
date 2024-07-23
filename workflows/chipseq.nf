@@ -78,7 +78,8 @@ workflow CHIPSEQ {
 		params.save_filtered_bam,
 		params.skip_pseudoreplication,
 		params.save_tagalign,
-		params.encode_max_macs2_peaks
+		params.encode_max_macs2_peaks,
+		params.markdup_method
 	)
 
 	DEEPTOOLS(
@@ -142,6 +143,7 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.sambamba_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.lib_qc.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.spp.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
