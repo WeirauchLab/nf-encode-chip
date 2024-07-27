@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         profile: [docker]
+        shard: [1, 2, 3, 4]
 
     steps:
       - name: Checkout repository
@@ -40,4 +41,8 @@ jobs:
           nf-test version
 
       - name: Run tests
-        run: nf-test test --profile ${{matrix.profile}} --verbose
+        run: |
+          nf-test test \
+          --profile ${{matrix.profile}} \
+          --verbose \
+          --shard ${{ matrix.shard }}/${{ strategy.job-total }}
