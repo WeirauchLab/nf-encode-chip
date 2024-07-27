@@ -16,7 +16,7 @@ nextflow_pipeline {
 				sourmash_ext_args    = "abund"
 				kraken2_db           = "https://raw.githubusercontent.com/andvon/test_datasets/nf-encode-chip/data/metagenomics/kraken2_test_db.tar"
 				skip_sourmash        = true
-				max_cpus             = 4
+				max_cpus             = 2
 				max_memory           = "6.GB"
 				max_walltime         = "24.h"
 				homer_motif_lib      = "https://raw.githubusercontent.com/andvon/test_datasets/nf-encode-chip/data/genome/homer_ctcf.motif"
