@@ -42,6 +42,7 @@ workflow ENCODE_CHIP {
 	skip_pseudoreplication
 	save_tagalign
 	max_peaks
+	markdup_method
 
 	main:
 
@@ -59,7 +60,7 @@ workflow ENCODE_CHIP {
 	TASK_FILTER(
 		ch_bam_aligned,
 		mapq_threshold,
-		"picard",
+		markdup_method,
 		skip_low_mapq_filter,
 		skip_rm_duplicates,
 		save_filtered_bam
@@ -124,6 +125,7 @@ workflow ENCODE_CHIP {
 	bam_filtered               = TASK_FILTER.out.bam
 	bam_filtered_index         = TASK_FILTER.out.bai
 	picard_metrics             = TASK_FILTER.out.picard_metrics
+	sambamba_log               = TASK_FILTER.out.sambamba_log
 	filtered_flagstat          = TASK_FILTER.out.flagstat
 	spp                        = TASK_XCORR.out.spp
 	xcorr_csv                  = TASK_XCORR.out.xcorr_csv

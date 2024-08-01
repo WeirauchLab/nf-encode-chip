@@ -1,7 +1,7 @@
 process FASTQC_FASTQC {
 	tag "${meta.id}"
-	cpus   = {1 * task.attempt}
-	memory = {16.GB * task.attempt}
+	cpus   = {5 * task.attempt}
+	memory = {32.GB * task.attempt}
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
