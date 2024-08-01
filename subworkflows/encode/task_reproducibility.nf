@@ -139,7 +139,27 @@ workflow TASK_REPRODUCIBILITY {
 			overlap: meta.mode == "overlap"
 		}
 		.set{ch_reproducible_peaks_branched}
+
+	ENCODE_REPRODUCIBILITY.out.optimal
+		.map{meta, peaks ->
+			def new_meta = meta.clone()
+			new_meta.peak_class = "optimal"
+			new_meta.id = [new_meta.group, new_meta.mode, new_meta.peak_class].join("_")
+			new_meta = new_meta.subMap("id","group","mode","peak_class")
+			[new_meta, peaks]
+		}
+		.set{ch_optimal}
+	ENCODE_REPRODUCIBILITY.out.conservative
+		.map{meta, peaks ->
+			def new_meta = meta.clone()
+			new_meta.peak_class = "conservative"
+			new_meta.id = [new_meta.group, new_meta.mode, new_meta.peak_class].join("_")
+			new_meta = new_meta.subMap("id","group","mode","peak_class")
+			[new_meta, peaks]
+		}
+		.set{ch_conservative}
 	
+
 	publish:
 	ch_idr_peaks                           >> "encode/macs2/idr"
 	ch_reproducible_peaks_branched.idr     >> "encode/macs2/idr"
@@ -151,4 +171,6 @@ workflow TASK_REPRODUCIBILITY {
 	overlap_peaks              = ch_overlap_peaks
 	idr_reproducible_peaks     = ch_reproducible_peaks_branched.idr
 	overlap_reproducible_peaks = ch_reproducible_peaks_branched.overlap
+	optimal                    = ch_optimal
+	conservative               = ch_conservative
 }

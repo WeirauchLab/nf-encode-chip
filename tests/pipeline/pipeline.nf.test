@@ -20,7 +20,9 @@ nextflow_pipeline {
 				max_memory           = "6.GB"
 				max_walltime         = "24.h"
 				homer_motif_lib      = "https://raw.githubusercontent.com/andvon/test_datasets/nf-encode-chip/data/genome/homer_ctcf.motif"
-				save_reference	     = true
+				save_reference	     = false
+				save_trimmed_fastq   = false
+				publish_dir_mode     = "symlink"
 			}
 		}
 
