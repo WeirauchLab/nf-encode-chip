@@ -147,6 +147,7 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.lib_qc.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.spp.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.peakstats.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},

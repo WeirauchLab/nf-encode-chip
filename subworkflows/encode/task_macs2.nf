@@ -21,13 +21,15 @@ workflow TASK_MACS2 {
 	// TODO: Make this use the pooled control tagAlign file
 	ch_tagalign
 		.map{meta, ta -> 
-			if(meta.control_id){
-				def control_entry = list_tagalign.findAll{it[0].id == meta.control_id}
+			def new_meta = meta.clone()
+			new_meta.tagalign_id = new_meta.id
+			if(new_meta.control_id){
+				def control_entry = list_tagalign.findAll{it[0].id == new_meta.control_id}
 				if(control_entry) {
-					[meta, ta, control_entry[1]]
+					[new_meta, ta, control_entry[1]]
 				}
 				} else {
-					[meta, ta, []]
+					[new_meta, ta, []]
 				}
 			}
 		.set {ch_macs2_input}
