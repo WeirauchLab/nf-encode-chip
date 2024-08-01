@@ -16,7 +16,7 @@ class EncodePeakStats(BaseMultiqcModule):
             target="encode_peakstats",
             anchor="encode_peakstats",
             href="",
-            info="",
+            info="Peak files calculated within the ENCODE portion of the pipeline are summarized here.",
         )
         config_sp = getattr(config.sp, "encode/peakstats", {})
         file_pattern = config_sp.get("fn", "data/encode_peakstats/*.json")
@@ -60,7 +60,12 @@ class EncodePeakStats(BaseMultiqcModule):
                 name="Peak Statistics",
                 plot=peakstats_plot,
                 anchor="encode_peakstats_section",
-                description="""""",
+                description="""
+                The following table shows the number of peaks, total reads,\n
+                reads in peaks, and fraction of reads in peaks (FRiP)\n
+                for each sample.\n
+                Read intersections are calculated using the tagAlign file.\n
+                """,
                 helptext="""""",
             )
 
