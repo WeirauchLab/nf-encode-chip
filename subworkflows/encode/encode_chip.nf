@@ -117,19 +117,27 @@ workflow ENCODE_CHIP {
 	// Peak stats
 	// This takes peak files, matches them back against their tag align file
 	// and calculates the FRiP score / number of peaks
-	ch_peaks_filtered
-		.map{meta, peak ->
-			[meta.tagalign_id, meta, peak]
-		}
-		.join(
-			ch_tagalign
-				.map{meta, ta ->
-					[meta.id, ta]
-				},
-			by: 0)
-		.map{tagalign_id, meta, peak, tagalign ->
-			[meta, peak, tagalign]
-		}
+	Channel.empty()
+		.mix(
+			ch_peaks_filtered
+				.map{meta, peak ->[meta.tagalign_id, meta, peak]}
+				.join(ch_tagalign.map{meta, ta ->[meta.id, ta]}, by: 0)
+				.map{it -> it[1..-1]}
+		)
+		.mix(
+			TASK_REPRODUCIBILITY.out.conservative
+				.mix(TASK_REPRODUCIBILITY.out.optimal)
+				.map{meta, peaks ->
+					[meta.group, meta, peaks]
+				}
+				.combine(
+					ch_tagalign
+						.filter{meta, ta -> meta.sample_type == "pooled"}
+						.map{meta, ta ->[meta.group, ta]},
+					by: 0
+				)
+				.map{it -> it[1..-1]}
+		)
 		.set{ch_peakstats_input}
 
 	CALC_PEAKSTATS(ch_peakstats_input)
@@ -156,6 +164,8 @@ workflow ENCODE_CHIP {
 	pval_bigwig                = TASK_MACS2.out.pval_bigwig
 	narrowPeak                 = TASK_MACS2.out.narrowPeak
 	peaks_filtered             = ch_peaks_filtered
+	conservative_peaks         = TASK_REPRODUCIBILITY.out.conservative
+	optimal_peaks              = TASK_REPRODUCIBILITY.out.optimal
 	idr_peaks                  = TASK_REPRODUCIBILITY.out.idr_peaks
 	overlap_peaks              = TASK_REPRODUCIBILITY.out.overlap_peaks
 	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
