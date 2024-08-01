@@ -41,7 +41,7 @@ workflow TASK_TAGALIGN {
 			def new_meta = [:]
 			if(meta.pr_rep){
 				new_meta = [
-					id: "${meta.group}_${meta.sample_type}${meta.pr_rep}",
+					id: "${meta.group}_pooled_pr${meta.pr_rep}",
 					group: meta.group,
 					single_end: meta.single_end,
 					sample_type: "pooled_pr",
@@ -49,7 +49,7 @@ workflow TASK_TAGALIGN {
 				]
 			} else {
 				new_meta = [
-					id: "${meta.group}_${meta.sample_type}",
+					id: "${meta.group}_pooled",
 					group: meta.group,
 					single_end: meta.single_end,
 					sample_type: "pooled"
