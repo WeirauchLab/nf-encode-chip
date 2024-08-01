@@ -139,7 +139,7 @@ workflow TASK_REPRODUCIBILITY {
 			overlap: meta.mode == "overlap"
 		}
 		.set{ch_reproducible_peaks_branched}
-	
+
 	publish:
 	ch_idr_peaks                           >> "encode/macs2/idr"
 	ch_reproducible_peaks_branched.idr     >> "encode/macs2/idr"

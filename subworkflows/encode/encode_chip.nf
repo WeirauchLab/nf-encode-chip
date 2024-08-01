@@ -2,6 +2,7 @@
 include { DEEPTOOLS_PLOTFINGERPRINT } from "../../modules/local/deeptools/plotFingerprint/main"
 include { FILTER_PEAKS              } from "../../modules/encode/filter_peaks/main"
 include { LIB_QC                    } from "../../modules/encode/lib_qc/main"
+include { CALC_PEAKSTATS            } from '../../modules/encode/calc_peakstats/main'
 
 include { TASK_ALIGN               } from './task_align.nf'
 include { TASK_FILTER              } from './task_filter.nf'
@@ -83,9 +84,10 @@ workflow ENCODE_CHIP {
 		ch_chip_mode,
 		ch_mito_chr_name
 	)
+	ch_tagalign = TASK_XCORR.out.tagAlign
 
 	TASK_MACS2(
-		TASK_XCORR.out.tagAlign,
+		ch_tagalign,
 		ch_fai,
 		ch_gensz,
 		max_peaks
@@ -111,6 +113,26 @@ workflow ENCODE_CHIP {
 		skip_idr,
 		skip_overlap
 	)
+
+	// Peak stats
+	// This takes peak files, matches them back against their tag align file
+	// and calculates the FRiP score / number of peaks
+	ch_peaks_filtered
+		.map{meta, peak ->
+			[meta.tagalign_id, meta, peak]
+		}
+		.join(
+			ch_tagalign
+				.map{meta, ta ->
+					[meta.id, ta]
+				},
+			by: 0)
+		.map{tagalign_id, meta, peak, tagalign ->
+			[meta, peak, tagalign]
+		}
+		.set{ch_peakstats_input}
+
+	CALC_PEAKSTATS(ch_peakstats_input)
 
 
 	publish:
@@ -139,4 +161,5 @@ workflow ENCODE_CHIP {
 	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
 	overlap_reproducible_peaks = TASK_REPRODUCIBILITY.out.overlap_reproducible_peaks
 	lib_qc                     = LIB_QC.out.tsv
+	peakstats                  = CALC_PEAKSTATS.out.peakstats
 }

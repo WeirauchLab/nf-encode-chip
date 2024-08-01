@@ -17,6 +17,7 @@ process MULTIQC {
     path "data/lib_qc/*"
     path "data/spp/*"
     path "data/spp_xcor/*"
+    path "data/encode_peakstats/*"
     path "data/sourmash/gather/*"
     path "data/kraken2/*"
     path "data/encode_reproducibility_stats/idr/*"
