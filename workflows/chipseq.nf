@@ -67,7 +67,6 @@ workflow CHIPSEQ {
 		params.idr_threshold_col ? params.idr_threshold_col : "p.value",
 		params.idr_threshold ? params.idr_threshold : 0.05,
 		params.mito_chr_name ?: [],
-		params.chip_mode ?: "tf",
 		params.skip_align,
 		params.skip_peak_filtering,
 		params.skip_idr,
