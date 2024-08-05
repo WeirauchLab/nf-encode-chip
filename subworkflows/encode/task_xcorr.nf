@@ -4,14 +4,12 @@ include { EXTRACT_XCOR           } from "../../modules/local/phantompeakqualtool
 workflow TASK_XCORR {
 	take:
 	ch_tagalign // [ val(meta), path(tagAlign) ]
-	ch_mode     // "tf" or "histone"
 	ch_mito_chr // string or []
 
 	main:
-	
+
 	RUN_SPP(
-		ch_tagalign,
-		ch_mode,
+		ch_tagalign.map{meta, tagalign -> [meta, tagalign, meta.chip_mode]},
 		ch_mito_chr
 	)
 	EXTRACT_XCOR(RUN_SPP.out.rdata)

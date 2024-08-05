@@ -40,20 +40,9 @@ workflow TASK_TAGALIGN {
 		.map{ meta, ta ->
 			def new_meta = [:]
 			if(meta.pr_rep){
-				new_meta = [
-					id: "${meta.group}_pooled_pr${meta.pr_rep}",
-					group: meta.group,
-					single_end: meta.single_end,
-					sample_type: "pooled_pr",
-					pr_rep: meta.pr_rep
-				]
+				new_meta = [id: "${meta.group}_pooled_pr${meta.pr_rep}", sample_type: "pooled_pr"] + meta.subMap("group", "single_end", "pr_rep", "chip_mode")
 			} else {
-				new_meta = [
-					id: "${meta.group}_pooled",
-					group: meta.group,
-					single_end: meta.single_end,
-					sample_type: "pooled"
-				]
+				new_meta = [id: "${meta.group}_pooled", sample_type: "pooled"] + meta.subMap("group", "single_end", "chip_mode")
 			}
 			[ new_meta, ta ]
 		}
