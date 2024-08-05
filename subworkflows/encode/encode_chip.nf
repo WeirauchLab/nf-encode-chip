@@ -31,7 +31,6 @@ workflow ENCODE_CHIP {
 	ch_idr_threshold_col
 	ch_idr_threshold
 	ch_mito_chr_name
-	ch_chip_mode
 	skip_align
 	skip_peak_filtering
 	skip_idr
@@ -81,7 +80,6 @@ workflow ENCODE_CHIP {
 	)
 	TASK_XCORR(
 		TASK_TAGALIGN.out.tagAlign,
-		ch_chip_mode,
 		ch_mito_chr_name
 	)
 	ch_tagalign = TASK_XCORR.out.tagAlign

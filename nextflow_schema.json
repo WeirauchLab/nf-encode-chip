@@ -99,22 +99,6 @@
                 }
             }
         },
-        "encode_options": {
-            "title": "ENCODE options",
-            "type": "object",
-            "description": "Options for ENCODE that don't fit in other places.",
-            "properties": {
-                "chip_mode": {
-                    "type": "string",
-                    "default": "tf",
-                    "enum": [
-                        "tf",
-                        "histone"
-                    ],
-                    "description": "The mode to use for ENCODE."
-                }
-            }
-        },
         "alignment_options": {
             "title": "Alignment options",
             "type": "object",

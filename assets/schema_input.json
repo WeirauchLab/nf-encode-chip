@@ -32,6 +32,18 @@
 					"group"
 				]
 			},
+			"chip_mode": {
+				"type": "string",
+				"default": "tf",
+				"errorMessage": "Must be one of the following: 'tf', 'histone'",
+				"meta": [
+					"chip_mode"
+				],
+				"enum": [
+					"tf",
+					"histone"
+				]
+			},
 			"fastq_1": {
 				"type": "string",
 				"pattern": "^\\S+\\.f(ast)?q\\.gz$",
