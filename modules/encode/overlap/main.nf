@@ -20,12 +20,19 @@ process OVERLAP_PEAKS {
 	bedtools intersect \\
 		-a <(bedtools sort -i $peak1) \\
 		-b <(bedtools sort -i $peak2) \\
-		-u -f 0.5 -r | \\
-	bedtools intersect \\
-		-a - \\
-		-b <(bedtools sort -i $peak3) \\
-		-u -f 0.5 -r \\
-		> ${prefix}.overlap.narrowPeak
-
+		-wo \\
+	| awk 'BEGIN{FS="\\t";OFS="\\t"} {s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= 0.5) || (\$21/s2 >= 0.5)) {print \$0}}' \\
+	| cut -f 1-10 \\
+	| sort \\
+	| uniq \\
+	| bedtools intersect \\
+		-a stdin \\
+		-b <(bedtools sort -i $peak2) \\
+		-wo \\
+	| awk 'BEGIN{FS="\\t";OFS="\\t"} {s1=\$3-\$2; s2=\$13-\$12; if ((\$21/s1 >= 0.5) || (\$21/s2 >= 0.5)) {print \$0}}' \\
+	| cut -f 1-10 \\
+	| sort \\
+	| uniq \\
+	> ${prefix}.overlap.narrowPeak
 	"""
 }
