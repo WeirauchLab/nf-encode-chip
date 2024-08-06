@@ -29,6 +29,10 @@ process EXTRACT_XCOR {
 		) |>
 		dplyr::relocate(sample_id, .before = everything()) |>
 		dplyr::rename("shift" = "x","correlation" = "y") |>
+		dplyr::mutate(
+			normalized = correlation - min(correlation),
+			normalized = normalized / max(normalized)
+		) |>
 		readr::write_csv("${prefix}.crosscorr.csv", col_names = TRUE)
 
 
