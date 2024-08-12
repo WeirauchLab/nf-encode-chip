@@ -2,7 +2,7 @@
 
 This pipeline generates several different files as output.
 
-## ENCODE ChIP-seq Pipeline
+## ENCODE
 
 ### Genome Indices
 
