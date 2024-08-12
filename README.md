@@ -128,13 +128,15 @@ There are a few minor differences:
 
 - SPP peak calling is not included.
 - SPP's fragment estimation is performed on the full library, not just a subsampled tagAlign.
-- Summits are not called by MACS2.
+- SPP is not run using a re-aligned R1 file.
+- Summits are not called by MACS2 (as default at least).
   - This is done in ENCODE, but we don't typically use them.
 - Tool versions are not identical.
 
 Additionally, there are a few "silent" differences:
 
 - Pseudoreplicate generation was performed through a series of bash comands. This is now done through a python script.
+- The method for determining conservative / optimal peak sets was coded in a new python script.
 
 ### Additional Features
 
@@ -148,3 +150,13 @@ These features include:
 - Trackhubs for UCSC Genome Browser can be generated.
 - QC reporting is now done with MultiQC.
 - Metagenomics section added to classify reads.
+
+## FAQ
+
+### Where can I find more information?
+
+Check the documentation folder! This contains:
+
+- rehash of the quickstart
+- description of outputs
+- comparison of commands between ENCODE and Nextflow

@@ -18,6 +18,10 @@ process BOWTIE2_BUILD {
 	def prefix = task.ext.prefix ?: "${meta.id}"
 	def args = task.ext.args ?: ""
 	"""
-	bowtie2-build ${fasta} ${prefix}
+	bowtie2-build \\
+		--threads ${task.cpus} \\
+		${args} \\
+		${fasta} \\
+		${prefix}
 	"""
 }
