@@ -1,6 +1,8 @@
 process FASTQC {
     tag "$meta.id"
-    label 'process_medium'
+    cpus   = {5 * task.attempt}
+    memory = {24.GB * task.attempt}
+    time   = {2.h * task.attempt}
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

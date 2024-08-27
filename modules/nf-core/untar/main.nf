@@ -1,6 +1,8 @@
 process UNTAR {
     tag "$archive"
-    label 'process_single'
+    cpus   = {1 * task.attempt}
+	memory = {16.GB * task.attempt}
+	time   = {2.h * task.attempt}
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
