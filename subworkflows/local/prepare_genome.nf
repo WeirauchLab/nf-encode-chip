@@ -74,6 +74,8 @@ workflow PREPARE_GENOME {
 		ch_exclusion_peaks = channel.value([[:],[]])
 	}
 
+	ch_bowtie2_index.view()
+
 	emit:
 	genome_fasta       = ch_genome_fasta    // channel: [ val(meta), path(genome_fasta) ]
 	genome_fai         = ch_genome_fai      // channel: [ val(meta), path(fai) ]
