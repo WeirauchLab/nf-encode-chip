@@ -60,7 +60,7 @@ workflow PREPARE_GENOME {
 		ch_bowtie2_index = BOWTIE2_BUILD.out.index
 	} else if ( bowtie2_index.endsWith('.tar.gz') || bowtie2_index.endsWith('.tar') ) {
 		UNTAR_BOWTIE2_INDEX([[id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
-		ch_bowtie2_index = UNTAR.out.untar
+		ch_bowtie2_index = UNTAR_BOWTIE2_INDEX.out.untar
 	} else {
 		ch_bowtie2_index = channel.value([ [id: file(bowtie2_index).simpleName ], file(bowtie2_index) ])
 	}
