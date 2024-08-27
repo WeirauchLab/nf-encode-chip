@@ -12,7 +12,7 @@ process CAT_FASTQ {
 
     output:
     tuple val(meta), path("*.merged.fastq.gz"), emit: reads
-    tuple val(task.process), val("cat") , eval("echo \$(cat --version 2>&1) | sed 's/^.*coreutils) //; s/ .*\$//'") , topic: versions
+    tuple val(task.process), val("cat") , eval("cat --version | sed -n 's/^cat (GNU coreutils) //p'") , topic: versions
 
     when:
     task.ext.when == null || task.ext.when
