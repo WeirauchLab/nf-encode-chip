@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com//master/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/cchmc/nf-encode-chip/master/nextflow_schema.json",
     "title": " pipeline parameters",
     "description": "",
     "type": "object",
@@ -296,7 +296,7 @@
                 },
                 "skip_sourmash": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip sourmash."
                 },
                 "sourmash_db": {

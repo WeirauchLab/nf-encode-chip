@@ -22,12 +22,15 @@ process BOWTIE2_ALIGN {
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"
 	def args = task.ext.args ?: ""
-	def index_prefix = index[0].toString() - ~/(\.rev)?\.[0-9]+\.bt2$/
 	def fastq_args = meta.single_end ? "-U ${fastq}" : "-1 ${fastq[0]} -2 ${fastq[1]}"
 	"""
+	# The code for the INDEX variable is from the nf-core module.
+	# Please see https://github.com/nf-core/modules/blob/master/modules/nf-core/bowtie2/align/main.nf
+	INDEX=`find -L ./ -name "*.rev.1.bt2" | sed "s/\\.rev.1.bt2\$//"`
+
 	bowtie2 \\
 		--threads ${task.cpus} \\
-		-x ${index_prefix} \\
+		-x \$INDEX \\
 		${fastq_args} \\
 		${args} \\
 		2> >(tee ${prefix}.bowtie2.log >&2) \\
