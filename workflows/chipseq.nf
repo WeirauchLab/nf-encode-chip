@@ -40,6 +40,9 @@ workflow CHIPSEQ {
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 		.map{ meta, fq1, fq2 -> 
+			if(meta.control_id && meta.control_id == meta.group){
+				meta.control_id = []
+			}
 			if(fq2){
 				[ meta + [sample_type: "sample", single_end: false], [fq1, fq2] ]
 			} else {
