@@ -78,11 +78,14 @@ workflow ENCODE_CHIP {
 		skip_pseudoreplication,
 		save_tagalign
 	)
+	ch_tagalign = TASK_TAGALIGN.out.tagAlign
+
 	TASK_XCORR(
-		TASK_TAGALIGN.out.tagAlign,
+		ch_tagalign,
 		ch_mito_chr_name
 	)
 	ch_tagalign = TASK_XCORR.out.tagAlign
+
 
 	TASK_MACS2(
 		ch_tagalign,
@@ -115,28 +118,33 @@ workflow ENCODE_CHIP {
 	// Peak stats
 	// This takes peak files, matches them back against their tag align file
 	// and calculates the FRiP score / number of peaks
+
+	TASK_REPRODUCIBILITY.out.idr_conservative
+		| mix(TASK_REPRODUCIBILITY.out.idr_optimal)
+		| mix(TASK_REPRODUCIBILITY.out.overlap_conservative)
+		| mix(TASK_REPRODUCIBILITY.out.overlap_optimal)
+		| map{meta, peaks ->
+			[meta.group, meta, peaks]
+		}
+		| combine(
+			ch_tagalign
+				| filter{ meta, ta -> meta.sample_type == "pooled" && !meta.pr_rep }
+				| map{ meta, ta ->[meta.group, ta] },
+			by: 0
+		)
+		| map{it -> it[1..-1]}
+		| set{ch_rep_peaks_prepared}
+
 	Channel.empty()
-		.mix(
+		| mix(
 			ch_peaks_filtered
-				.map{meta, peak ->[meta.tagalign_id, meta, peak]}
-				.join(ch_tagalign.map{meta, ta ->[meta.id, ta]}, by: 0)
-				.map{it -> it[1..-1]}
+				| map{meta, peak ->[meta.id, meta, peak]}
+				| join(ch_tagalign.map{meta, ta ->[meta.id, ta]}, by: 0)
+				| map{it -> it[1..-1]}
 		)
-		.mix(
-			TASK_REPRODUCIBILITY.out.conservative
-				.mix(TASK_REPRODUCIBILITY.out.optimal)
-				.map{meta, peaks ->
-					[meta.group, meta, peaks]
-				}
-				.combine(
-					ch_tagalign
-						.filter{meta, ta -> meta.sample_type == "pooled"}
-						.map{meta, ta ->[meta.group, ta]},
-					by: 0
-				)
-				.map{it -> it[1..-1]}
-		)
-		.set{ch_peakstats_input}
+		| mix(ch_rep_peaks_prepared)
+		| set{ch_peakstats_input}
+
 
 	CALC_PEAKSTATS(ch_peakstats_input)
 
@@ -146,28 +154,29 @@ workflow ENCODE_CHIP {
 	LIB_QC.out.tsv            >> "encode/lib_qc"
 
 	emit:
-	bam_aligned                = TASK_ALIGN.out.bam
-	bam_aligned_index          = TASK_ALIGN.out.bai
-	bowtie2_log                = TASK_ALIGN.out.bowtie2_log
-	raw_flagstat               = TASK_ALIGN.out.flagstat
-	bam_filtered               = TASK_FILTER.out.bam
-	bam_filtered_index         = TASK_FILTER.out.bai
-	picard_metrics             = TASK_FILTER.out.picard_metrics
-	sambamba_log               = TASK_FILTER.out.sambamba_log
-	filtered_flagstat          = TASK_FILTER.out.flagstat
-	spp                        = TASK_XCORR.out.spp
-	xcorr_csv                  = TASK_XCORR.out.xcorr_csv
-	processed_tagalign         = TASK_TAGALIGN.out.tagAlign
-	fc_bigwig                  = TASK_MACS2.out.fc_bigwig
-	pval_bigwig                = TASK_MACS2.out.pval_bigwig
-	narrowPeak                 = TASK_MACS2.out.narrowPeak
-	peaks_filtered             = ch_peaks_filtered
-	conservative_peaks         = TASK_REPRODUCIBILITY.out.conservative
-	optimal_peaks              = TASK_REPRODUCIBILITY.out.optimal
-	idr_peaks                  = TASK_REPRODUCIBILITY.out.idr_peaks
-	overlap_peaks              = TASK_REPRODUCIBILITY.out.overlap_peaks
-	idr_reproducible_peaks     = TASK_REPRODUCIBILITY.out.idr_reproducible_peaks
-	overlap_reproducible_peaks = TASK_REPRODUCIBILITY.out.overlap_reproducible_peaks
-	lib_qc                     = LIB_QC.out.tsv
-	peakstats                  = CALC_PEAKSTATS.out.peakstats
+	bam_aligned                 = TASK_ALIGN.out.bam
+	bam_aligned_index           = TASK_ALIGN.out.bai
+	bowtie2_log                 = TASK_ALIGN.out.bowtie2_log
+	raw_flagstat                = TASK_ALIGN.out.flagstat
+	bam_filtered                = TASK_FILTER.out.bam
+	bam_filtered_index          = TASK_FILTER.out.bai
+	picard_metrics              = TASK_FILTER.out.picard_metrics
+	sambamba_log                = TASK_FILTER.out.sambamba_log
+	filtered_flagstat           = TASK_FILTER.out.flagstat
+	spp                         = TASK_XCORR.out.spp
+	xcorr_csv                   = TASK_XCORR.out.xcorr_csv
+	processed_tagalign          = TASK_TAGALIGN.out.tagAlign
+	fc_bigwig                   = TASK_MACS2.out.fc_bigwig
+	pval_bigwig                 = TASK_MACS2.out.pval_bigwig
+	narrowPeak                  = TASK_MACS2.out.narrowPeak
+	peaks_filtered              = ch_peaks_filtered
+	idr_optimal                 = TASK_REPRODUCIBILITY.out.idr_optimal
+	idr_conservative            = TASK_REPRODUCIBILITY.out.idr_conservative
+	overlap_optimal             = TASK_REPRODUCIBILITY.out.overlap_optimal
+	overlap_conservative        = TASK_REPRODUCIBILITY.out.overlap_conservative
+	reproducibility_peak_counts = TASK_REPRODUCIBILITY.out.peak_counts
+	reproducibility_stats_csv   = TASK_REPRODUCIBILITY.out.stats_csv
+	reproducibility_stats_json  = TASK_REPRODUCIBILITY.out.stats_json
+	lib_qc                      = LIB_QC.out.tsv
+	peakstats                   = CALC_PEAKSTATS.out.peakstats
 }
