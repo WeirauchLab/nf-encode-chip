@@ -30,7 +30,8 @@
 				"ms-python.vscode-pylance",
 				"ms-python.python",
 				"REditorSupport.r",
-				"nf-core.nf-core-extensionpack"
+				"nf-core.nf-core-extensionpack",
+				"mhutchie.git-graph"
 			]
 		}
 	}
