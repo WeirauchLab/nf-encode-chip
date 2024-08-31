@@ -40,6 +40,9 @@ workflow CHIPSEQ {
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
 		.map{ meta, fq1, fq2 -> 
+			if(meta.control_id && meta.control_id == meta.group){
+				meta.control_id = []
+			}
 			if(fq2){
 				[ meta + [sample_type: "sample", single_end: false], [fq1, fq2] ]
 			} else {
@@ -96,9 +99,12 @@ workflow CHIPSEQ {
 	)
 
 	ch_homer_peak_inputs = Channel.empty()
-	ch_homer_peak_inputs = ch_homer_peak_inputs
-		.mix(ENCODE_CHIP.out.idr_reproducible_peaks)
-		.mix(ENCODE_CHIP.out.overlap_reproducible_peaks)
+	ch_homer_peak_inputs
+		| mix(ENCODE_CHIP.out.idr_conservative)
+		| mix(ENCODE_CHIP.out.idr_optimal)
+		| mix(ENCODE_CHIP.out.overlap_conservative)
+		| mix(ENCODE_CHIP.out.overlap_optimal)
+		| set{ch_homer_peak_inputs}
 
 	HOMER(
 		ch_homer_peak_inputs,
@@ -113,14 +119,14 @@ workflow CHIPSEQ {
 		PREPARE_GENOME.out.genome_fai,
 		DEEPTOOLS.out.bigwig,
 		ENCODE_CHIP.out.fc_bigwig.mix(ENCODE_CHIP.out.pval_bigwig),
-		ENCODE_CHIP.out.idr_reproducible_peaks,
-		ENCODE_CHIP.out.overlap_reproducible_peaks
+		ENCODE_CHIP.out.idr_conservative.mix(ENCODE_CHIP.out.idr_optimal),
+		ENCODE_CHIP.out.overlap_conservative.mix(ENCODE_CHIP.out.overlap_optimal)
 	)
 
-	Channel.topic('encode_reproducibility_json')
+	ENCODE_CHIP.out.reproducibility_stats_json
 		.branch{meta, peak ->
-			idr: meta.mode == "idr"
-			overlap: meta.mode == "overlap"
+			idr: meta.reproducibility_mode == "idr"
+			overlap: meta.reproducibility_mode == "overlap"
 		}
 		.set{ch_reproducibility_peaks_branched}
 
@@ -133,6 +139,8 @@ workflow CHIPSEQ {
 			"${process}:\n${name_versions_collapsed}"
 		}
 		.set{ch_versions}
+
+	// ENCODE_CHIP.out.peakstats.view()
 
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],

@@ -32,12 +32,16 @@ process IDR_PEAKS {
 		--rank ${rank} \\
 		--soft-idr-threshold ${idr_threshold} \\
 		--plot
-	
-	mv ${prefix}.unthresholded-peaks.txt.png ${prefix}.unthresholded-peaks.png
-	cat ${prefix}.unthresholded-peaks.txt \\
-		| awk 'BEGIN{OFS="\\t"} \$12 >= ${negative_log10_thresh} {if (\$2<0) \$2=0; print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10}' \\
-		| sort | uniq | sort -k1,1 -k2,2n \\
-		> ${prefix}.idr-thresh.narrowPeak
+
+	if [ \$? -eq 0 ]; then
+		mv ${prefix}.unthresholded-peaks.txt.png ${prefix}.unthresholded-peaks.png
+		cat ${prefix}.unthresholded-peaks.txt \\
+			| awk 'BEGIN{OFS="\\t"} \$12 >= ${negative_log10_thresh} {if (\$2<0) \$2=0; print \$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10}' \\
+			| sort | uniq | sort -k1,1 -k2,2n \\
+			> ${prefix}.idr-thresh.narrowPeak
+	else
+		echo "IDR failed due to insufficient peaks, skipping this step."
+	fi
 
 	"""
 }
