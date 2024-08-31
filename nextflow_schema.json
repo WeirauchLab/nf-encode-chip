@@ -36,6 +36,8 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
                 },
@@ -47,6 +49,8 @@
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.gtf(\\.gz)?$",
                     "description": "Path to a .gtf or .gtf.gz file containing genome annotations."
                 },
                 "mito_chr_name": {
@@ -72,6 +76,8 @@
                 "exclusion_peaks": {
                     "type": "string",
                     "format": "file-path",
+                    "exists": true,
+                    "mimetype": "text/plain",
                     "description": "Path to exclusion peak file.",
                     "help_text": ""
                 },
