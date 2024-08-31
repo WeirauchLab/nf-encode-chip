@@ -14,26 +14,75 @@ workflow TASK_MACS2 {
 	ch_fc_bigwig   = Channel.empty()
 	ch_pval_bigwig = Channel.empty()
 
+	//ch_tagalign.view()
+	//	| filter {meta, ta -> meta.sample_type == "pooled"}
+	//	//| branch {meta, ta ->
+	//	//	pooled: !meta.pr_rep
+	//	//	pooled_pr: meta.pr_rep
+	//	//}
+	//	| set{ch_pooled_ta}
+
 	ch_tagalign
-		.collect{meta, ta -> [ [meta.id,ta] ]}
-		.set{list_tagalign}
-	// This tries to match the control tagAlign file with the treatment tagAlign file
-	// TODO: Make this use the pooled control tagAlign file
-	ch_tagalign
-		.map{meta, ta -> 
-			def new_meta = meta.clone()
-			new_meta.tagalign_id = new_meta.id
-			if(new_meta.control_id){
-				def control_entry = list_tagalign.findAll{it[0].id == new_meta.control_id}
-				if(control_entry) {
-					[new_meta, ta, control_entry[1]]
-				}
-				} else {
-					[new_meta, ta, []]
-				}
-			}
-		.set {ch_macs2_input}
-	
+		| branch{meta, ta ->
+			no_ctrl: !meta.control_id
+				return [meta, ta, []]
+			ctrl_pooled:  meta.sample_type in ["sample", "pr"] && meta.control_type.contains("pooled")
+				return [ [meta.control_id, meta.pr_rep, "pooled"], meta, ta ]
+			ctrl_sample: meta.sample_type in ["sample", "pr"] && meta.control_type.contains("sample")
+				return [ [meta.control_id, meta.pr_rep, meta.sample_type], meta, ta ]
+			pooled_ctrl_group: meta.sample_type == "pooled" && meta.control_type.contains("pooled")
+				return [ meta.control_id, meta, ta ]
+			pooled_ctrl_sample: meta.sample_type == "pooled" && meta.control_type.contains("sample")
+				return [ meta.control_id, meta, ta ]
+		}
+		| set{ch_tagalign_branches}
+
+	ch_tagalign_branches.ctrl_sample
+		| join(
+			ch_tagalign.map{meta, ta -> [[meta.sample_id, meta.pr_rep, meta.sample_type], ta]},
+			by: 0
+		)
+		| map{ key, meta, ta, ctrl -> [meta, ta, ctrl] }
+		| set{ch_tagalign_ctrl_sample}
+	ch_tagalign_branches.ctrl_pooled
+		| join(
+			ch_tagalign.map{meta, ta -> [[meta.group, meta.pr_rep, meta.sample_type], ta]},
+			by: 0
+		)
+		| map{ key, meta, ta, ctrl -> [meta, ta, ctrl] }
+		| set{ch_tagalign_ctrl_pooled}
+
+	ch_tagalign_branches.pooled_ctrl_sample
+		| transpose(by: 0)
+		| join(
+			ch_tagalign.map{ meta, ta -> [meta.sample_id, meta.group] }
+		)
+		| distinct()
+		| map{control_id, meta, ta, group -> [[group, meta.pr_rep, "pooled"], meta, ta]}
+		| join(
+			ch_tagalign.map{meta, ta -> [[meta.group, meta.pr_rep, meta.sample_type], ta]},
+			by: 0
+		)
+		| map{key, meta, ta, ctrl -> [meta, ta, ctrl]}
+		| set{ch_tagalign_ctrl_pooled_sample}
+
+	ch_tagalign_branches.pooled_ctrl_group
+		| transpose(by: 0)
+		| map{ ctrl_group, meta, ta -> [[ctrl_group, meta.pr_rep, "pooled"], meta, ta] }
+		| join(
+			ch_tagalign.map{ meta, ta -> [[meta.group, meta.pr_rep, meta.sample_type], ta] }
+		)
+		| distinct()
+		| map{key, meta, ta, ctrl -> [meta, ta, ctrl]}
+		| set{ch_tagalign_ctrl_pooled_group}
+
+	ch_tagalign_branches.no_ctrl
+		| mix(ch_tagalign_ctrl_sample)
+		| mix(ch_tagalign_ctrl_pooled)
+		| mix(ch_tagalign_ctrl_pooled_sample)
+		| mix(ch_tagalign_ctrl_pooled_group)
+		| set{ch_macs2_input}
+
 	MACS2_CALLPEAK(
 		ch_macs2_input,
 		ch_faidx,

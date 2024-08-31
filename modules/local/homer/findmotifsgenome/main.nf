@@ -14,10 +14,11 @@ process HOMER_FINDMOTIFSGENOME {
 	path motif_lib
 
 	output:
-	tuple val(meta), path("*_knownResults.txt"), optional: true, emit: knownResults
-	tuple val(meta), path("*_denovo.html")     , optional: true, emit: denovo
-	tuple val(meta), path("*.tar.gz")          , optional: true, emit: tar
-	tuple val(task.process), val("HOMER")      , val("4.9.1")  , topic: versions
+	tuple val(meta), path("*_knownResults.txt") , optional: true, emit: knownResults
+	tuple val(meta), path("*_knownResults.html"), optional: true, emit: knownResults_html
+	tuple val(meta), path("*_homerResults.html"), optional: true, emit: homerResults_html
+	tuple val(meta), path("*.tar.gz")           , optional: true, emit: tar
+	tuple val(task.process), val("HOMER")       , val("4.9.1")  , topic: versions
 
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}"
@@ -37,10 +38,13 @@ process HOMER_FINDMOTIFSGENOME {
 	tar -cvf ${prefix}.tar.gz ${prefix}
 
 	if [ -f "${prefix}/homerResults.html" ]; then 
-		cp "${prefix}/homerResults.html" ${prefix}_denovo.html
+		cp "${prefix}/homerResults.html" ${prefix}_homerResults.html
 	fi
 	if [ -f "${prefix}/knownResults.txt" ]; then 
 		cp "${prefix}/knownResults.txt" ${prefix}_knownResults.txt
+	fi
+	if [ -f "${prefix}/knownResults.html" ]; then 
+		cp "${prefix}/knownResults.html" ${prefix}_knownResults.html
 	fi
 
 	rm -rf preparsed ${prefix}
