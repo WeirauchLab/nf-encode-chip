@@ -1,7 +1,7 @@
 process RUN_SPP {
 	tag "${meta.id}"
 	cpus   = {1 * task.attempt}
-	memory = {32.GB * task.attempt}
+	memory = {16.GB * task.attempt}
 	time   = {10.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
