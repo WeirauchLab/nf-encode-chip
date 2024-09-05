@@ -23,6 +23,7 @@ validateParameters()
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
+
 workflow CHIPSEQ {
 	// ------------------------
 	// INPUTS
@@ -39,18 +40,36 @@ workflow CHIPSEQ {
 
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
-		.map{ meta, fq1, fq2 -> 
-			if(meta.control_id && meta.control_id == meta.group){
-				meta.control_id = []
-			}
+		| map{ meta, fq1, fq2 -> 
 			if(fq2){
-				[ meta + [sample_type: "sample", single_end: false], [fq1, fq2] ]
+				[ meta + [sample_type: "sample", single_end: false, pr_rep: []], [fq1, fq2] ]
 			} else {
-				[ meta + [sample_type: "sample", single_end: true], [fq1] ]
+				[ meta + [sample_type: "sample", single_end: true, pr_rep: []], [fq1] ]
 			}
 		}
-		.set{ch_input}
+		| set{ch_input_base}
 	
+	ch_input_base
+		| branch{meta, fq -> 
+		control_sample_id: meta.control_sample_id
+			[meta.control_sample_id, meta, fq]		
+		no_control_sample_id: !meta.control_sample_id
+			[meta, fq]
+		}
+		| set{ch_input_branches}
+
+	ch_input_branches.control_sample_id
+		| join(
+			ch_input_base.map{meta, fq -> [meta.sample_id,meta.group]}
+		)
+		| map{control_id, meta, fq, control_group ->
+			def new_meta = meta.clone()
+			new_meta.control_group_id = control_group
+			[new_meta, fq]
+		}
+		| mix(ch_input_branches.no_control_sample_id)
+		| set{ch_input}
+
 	PREPARE_FASTQ(
 		ch_input,
 		params.skip_adapter_trimming,
