@@ -16,6 +16,9 @@ categories:
   - title: 'Documentation'
     labels:
       - 'documentation'
+  - title: 'Resources'
+    labels:
+      - 'resource'
   - title: 'Other'
     labels:
       - 'other'
