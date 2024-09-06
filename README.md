@@ -48,14 +48,15 @@ a combination of the following columns:
 
 The samplesheet is a CSV file that contains the following columns:
 
-| Column     | Required | Default | Description                                                      |
-| ---------- | -------- | ------- | ---------------------------------------------------------------- |
-| id         | Yes      |         | The sample ID                                                    |
-| group      | Yes      |         | A group name. Anything matching this gets treated as a replicate |
-| control_id | No       |         | The ID of the control group                                      |
-| chip_mode  | No       | tf      | One of: "tf", "histone"                                          |
-| fastq_1    | Yes      |         | The path to the first fastq file                                 |
-| fastq_2    | No       |         | The path to the second fastq file                                |
+| Column            | Required | Default | Description                                                      |
+| ----------------- | -------- | ------- | ---------------------------------------------------------------- |
+| id                | Yes      |         | The sample ID                                                    |
+| group             | Yes      |         | A group name. Anything matching this gets treated as a replicate |
+| control_sample_id | No       |         | The ID of the control sample.                                    |
+| control_group_id  | No       |         | The ID of the control group                                      |
+| chip_mode         | No       | tf      | One of: "tf", "histone"                                          |
+| fastq_1           | Yes      |         | The path to the first fastq file                                 |
+| fastq_2           | No       |         | The path to the second fastq file                                |
 
 An example samplesheet is shown below:
 
@@ -72,22 +73,24 @@ multiple rows for the same sample ID. They will be merged together (see "example
 #### About control groups
 
 Control samples are typically IgG or input samples. This pipeline can handle this on a per-sample or per-group basis.
-To implement this, you can specify the `control_id` column. There are two ways to specify controls:
+To implement this, you can specify either the `control_sample_id` or `control_group_id` column.
 
-- Specify a sample Id that is a paired control
+- Specify a sample ID that is a paired control
 
 ```csv
-id,control_id,group,chip_mode,fastq_1,fastq_2
+id,control_sample_id,group,chip_mode,fastq_1,fastq_2
 target1,input1,example,tf,/path/to/example1_R1.fastq.gz,/path/to/example1_R2.fastq.gz
 target2,input2,example,tf,/path/to/example1_R1.fastq.gz,/path/to/example1_R2.fastq.gz
 input1,,example,tf,/path/to/example2_R1_1.fastq.gz,/path/to/example2_R2_1.fastq.gz
 input2,,example,tf,/path/to/example2_R1_1.fastq.gz,/path/to/example2_R2_1.fastq.gz
 ```
 
+If a `control_sample_id` is specified, the `control_group_id` column will be filled in during the pipeline.
+
 - Specify a group name that is a control group
 
 ```csv
-id,control_id,group,chip_mode,fastq_1,fastq_2
+id,control_group_id,group,chip_mode,fastq_1,fastq_2
 target1,input,target,tf,/path/to/example1_R1.fastq.gz,/path/to/example1_R2.fastq.gz
 target2,input,target,tf,/path/to/example1_R1.fastq.gz,/path/to/example1_R2.fastq.gz
 input1,,input,tf,/path/to/example2_R1_1.fastq.gz,/path/to/example2_R2_1.fastq.gz

@@ -16,12 +16,20 @@
 					"sample_id"
 				]
 			},
-			"control_id": {
+			"control_sample_id": {
 				"type": "string",
 				"pattern": "^\\S+$",
 				"errorMessage": "Sample name must be provided and cannot contain spaces",
 				"meta": [
-					"control_id"
+					"control_sample_id"
+				]
+			},
+			"control_group_id": {
+				"type": "string",
+				"pattern": "^\\S+$",
+				"errorMessage": "Sample name must be provided and cannot contain spaces",
+				"meta": [
+					"control_group_id"
 				]
 			},
 			"group": {
