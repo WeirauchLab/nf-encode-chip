@@ -223,6 +223,11 @@
                     "default": 500000,
                     "description": "Maximum number of peaks to keep after calling peaks.",
                     "help_text": "Setting this to 0 will disable this cutoff."
+                },
+                "encode_macs2_post_qfilter": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "A q-filter to apply to ENCODE's peak outputs. This does NOT affect anything inside the ENCODE steps, and generates a new set of peaks."
                 }
             }
         },

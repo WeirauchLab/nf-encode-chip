@@ -111,6 +111,13 @@ Please see the multiQC report for more information.
 
 - `*_pr[12]*` are pseudoreplicate peaks.
 
+#### Q-filtered peaks
+
+Several of the commonly used peak files output by ENCODE are also filtered by a Q-value threshold.
+These can be found in the following directory: `encode/macs2/qfiltered`.
+
+The file pattern for these is: `qfilt-<THRESHOLD>_*`
+
 ### SPP
 
 ```bash
