@@ -77,7 +77,6 @@ class ReproducibilityStats:
                     for _ in f:
                         count += 1
                 self.rep_counts.append(count)
-            self.consistency_ratio = 0
             if min(self.rep_counts) > 0:
                 self.consistency_ratio = float(max(self.rep_counts)) / float(
                     min(self.rep_counts)
@@ -86,9 +85,10 @@ class ReproducibilityStats:
         if self.Nt is not None and self.Np is not None:
             if self.Nt > self.Np:
                 self.optimal = self.conservative
-            self.rescue_ratio = float(max(self.Nt, self.Np)) / float(
-                min(self.Nt, self.Np)
-            )
+            if min(self.Nt, self.Np) > 0:
+                self.rescue_ratio = float(max(self.Nt, self.Np)) / float(
+                    min(self.Nt, self.Np)
+                )
         if self.rescue_ratio is not None and self.consistency_ratio is not None:
             if self.rescue_ratio > 2.0 and self.consistency_ratio > 2.0:
                 self.reproducibility = "fail"
