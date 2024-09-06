@@ -1,4 +1,17 @@
 
+/*
+----------------------------------
+Modules        
+----------------------------------
+*/ 
+
+include {QFILTER_PEAKS} from "../modules/local/qfilter_peaks/main"
+
+/*
+----------------------------------
+Subworkflows        
+----------------------------------
+*/ 
 include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
@@ -119,6 +132,19 @@ workflow CHIPSEQ {
 		params.skip_kraken2
 	)
 
+	ch_qfilter_peaks_inputs  = Channel.empty()
+	ch_qfilter_peaks_outputs = Channel.empty()
+	ch_qfilter_peaks_inputs
+		| mix(ENCODE_CHIP.out.peaks_filtered)
+		| mix(ENCODE_CHIP.out.idr_optimal)
+		| mix(ENCODE_CHIP.out.overlap_optimal)
+		| mix(ENCODE_CHIP.out.idr_conservative)
+		| mix(ENCODE_CHIP.out.overlap_conservative)
+		| set{ch_qfilter_peaks_inputs}
+	
+	QFILTER_PEAKS(ch_qfilter_peaks_inputs)
+	ch_qfilter_peaks_outputs = QFILTER_PEAKS.out.peak
+
 	ch_homer_peak_inputs = Channel.empty()
 	ch_homer_peak_inputs
 		| mix(ENCODE_CHIP.out.idr_conservative)
@@ -191,7 +217,8 @@ workflow CHIPSEQ {
 	)
 
 	publish:
-	MULTIQC.out >> "multiqc"
+	MULTIQC.out              >> "multiqc"
+	ch_qfilter_peaks_outputs >> "encode/macs2/qfiltered"
 
 
 }
