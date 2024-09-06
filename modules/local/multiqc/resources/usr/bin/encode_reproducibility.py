@@ -21,8 +21,14 @@ class EncodeReproducibility(BaseMultiqcModule):
         self.data["idr"] = self.parse_files(
             "data/encode_reproducibility_stats/idr/*.json"
         )
+        self.data["idr_consistency"] = self.parse_files(
+            "data/encode_consistency/idr/*.json"
+        )
         self.data["overlap"] = self.parse_files(
             "data/encode_reproducibility_stats/overlap/*.json"
+        )
+        self.data["overlap_consistency"] = self.parse_files(
+            "data/encode_consistency/overlap/*.json"
         )
 
         if self.data["idr"]:
@@ -88,6 +94,53 @@ class EncodeReproducibility(BaseMultiqcModule):
                     failed replicate.
                     """,
             )
+        if self.data["idr_consistency"]:
+            self.write_data_file(self.data["idr_consistency"], "multiqc_encode_peak_consistency_idr")
+            peakstats_plot = table.plot(
+                data=self.data["idr_consistency"],
+                pconfig={
+                    "id": "encode_peak_consistency_idr_table",
+                    "title": "IDR Sample Peak Consistency",
+                },
+                headers={
+                    "id": {"title": "Peak ID", "hidden": True},
+                    "sample": {"title": "Sample ID", "hidden": True},
+                    "group": {"title": "Group", "hidden": False},
+                    "peak_file": {"title": "Peak File", "hidden": True},
+                    "tagalign_file": {"title": "tagAlign", "hidden": True},
+                    "total_peaks": {
+                        "title": "Total Peaks",
+                        "format": "{:,.0f}",
+                    },
+                    "total_reads": {
+                        "title": "Total Reads",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                    "reads_in_peaks": {
+                        "title": "Reads in Peaks",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                    "frip": {
+                        "title": "FRiP",
+                        "format": "{:.4f}",
+                    },
+                },
+            )
+            self.add_section(
+                name="IDR Sample Peak Consistency Statistics",
+                plot=peakstats_plot,
+                anchor="encode_peak_consistency_idr_section",
+                description="""
+                The following table shows the number of peaks, total reads,\n
+                reads in peaks, and fraction of reads in peaks (FRiP)\n
+                for each sample.\n
+                Read intersections are calculated using the tagAlign file.\n
+                """,
+                helptext="""""",
+            )
+
         if self.data["overlap"]:
             self.write_data_file(
                 self.data["overlap"], "multiqc_encode_overlap_reproducibility"
@@ -151,16 +204,64 @@ class EncodeReproducibility(BaseMultiqcModule):
                     failed replicate.
                     """,
             )
+        if self.data["overlap_consistency"]:
+            self.write_data_file(self.data["overlap_consistency"], "multiqc_encode_peak_consistency_overlap")
+            peakstats_plot = table.plot(
+                data=self.data["overlap_consistency"],
+                pconfig={
+                    "id": "encode_peak_consistency_overlap_table",
+                    "title": "Overlap Sample Peak Consistency",
+                },
+                headers={
+                    "id": {"title": "Peak ID", "hidden": True},
+                    "sample": {"title": "Sample ID", "hidden": True},
+                    "group": {"title": "Group", "hidden": False},
+                    "peak_file": {"title": "Peak File", "hidden": True},
+                    "tagalign_file": {"title": "tagAlign", "hidden": True},
+                    "total_peaks": {
+                        "title": "Total Peaks",
+                        "format": "{:,.0f}",
+                    },
+                    "total_reads": {
+                        "title": "Total Reads",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                    "reads_in_peaks": {
+                        "title": "Reads in Peaks",
+                        "format": "{:,.0f}",
+                        "hidden": True,
+                    },
+                    "frip": {
+                        "title": "FRiP",
+                        "format": "{:.4f}",
+                    },
+                },
+            )
+            self.add_section(
+                name="Overlap Sample Peak Consistency Statistics",
+                plot=peakstats_plot,
+                anchor="encode_peak_consistency_overlap_section",
+                description="""
+                The following table shows the number of peaks, total reads,\n
+                reads in peaks, and fraction of reads in peaks (FRiP)\n
+                for each sample.\n
+                Read intersections are calculated using the tagAlign file.\n
+                """,
+                helptext="""""",
+            )
 
-    def parse_files(self, file_pattern):
+    def parse_files(self, file_pattern, rm_keys=None, id_key="sample"):
         data = {}
         found_files = [f for f in glob.iglob(file_pattern, recursive=True)]
         for f in found_files:
             with open(f) as fh:
                 contents = json.load(fh)
-            sample_id = contents["sample"]
-            del contents["sample"]
+            sample_id = contents[id_key]
+            if rm_keys:
+                for key in rm_keys:
+                    del contents[key]
             data[sample_id] = contents
         log.info("Found {} reports for {}".format(len(self.data), file_pattern))
-
         return data
+

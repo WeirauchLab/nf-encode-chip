@@ -21,9 +21,11 @@ process CALC_PEAKSTATS {
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.peakstats"
 	def args = task.ext.args ?: ""
+	def sample_id_parse = meta.sample_id instanceof List ? meta.sample_id.join(";") : meta.sample_id
 	"""
 	peakstats.py \\
 		--id ${meta.id} \\
+		--sample '${sample_id_parse}' \\
 		--group ${meta.group} \\
 		--bed ${bed} \\
 		--tagalign ${tagalign} \\

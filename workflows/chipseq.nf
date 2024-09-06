@@ -1,4 +1,17 @@
 
+/*
+----------------------------------
+Modules        
+----------------------------------
+*/ 
+
+include {QFILTER_PEAKS} from "../modules/local/qfilter_peaks/main"
+
+/*
+----------------------------------
+Subworkflows        
+----------------------------------
+*/ 
 include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
 include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
@@ -23,6 +36,7 @@ validateParameters()
 // Print summary of supplied parameters
 log.info paramsSummaryLog(workflow)
 
+
 workflow CHIPSEQ {
 	// ------------------------
 	// INPUTS
@@ -39,18 +53,36 @@ workflow CHIPSEQ {
 
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
-		.map{ meta, fq1, fq2 -> 
-			if(meta.control_id && meta.control_id == meta.group){
-				meta.control_id = []
-			}
+		| map{ meta, fq1, fq2 -> 
 			if(fq2){
-				[ meta + [sample_type: "sample", single_end: false], [fq1, fq2] ]
+				[ meta + [sample_type: "sample", single_end: false, pr_rep: []], [fq1, fq2] ]
 			} else {
-				[ meta + [sample_type: "sample", single_end: true], [fq1] ]
+				[ meta + [sample_type: "sample", single_end: true, pr_rep: []], [fq1] ]
 			}
 		}
-		.set{ch_input}
+		| set{ch_input_base}
 	
+	ch_input_base
+		| branch{meta, fq -> 
+		control_sample_id: meta.control_sample_id
+			[meta.control_sample_id, meta, fq]		
+		no_control_sample_id: !meta.control_sample_id
+			[meta, fq]
+		}
+		| set{ch_input_branches}
+
+	ch_input_branches.control_sample_id
+		| join(
+			ch_input_base.map{meta, fq -> [meta.sample_id,meta.group]}
+		)
+		| map{control_id, meta, fq, control_group ->
+			def new_meta = meta.clone()
+			new_meta.control_group_id = control_group
+			[new_meta, fq]
+		}
+		| mix(ch_input_branches.no_control_sample_id)
+		| set{ch_input}
+
 	PREPARE_FASTQ(
 		ch_input,
 		params.skip_adapter_trimming,
@@ -79,7 +111,9 @@ workflow CHIPSEQ {
 		params.skip_rm_duplicates,
 		params.save_filtered_bam,
 		params.skip_pseudoreplication,
-		params.save_tagalign,
+		params.save_sample_tagalign,
+		params.save_pr_tagalign,
+		params.save_pooled_tagalign,
 		params.encode_max_macs2_peaks,
 		params.markdup_method
 	)
@@ -97,6 +131,19 @@ workflow CHIPSEQ {
 		params.kraken2_db ? file(params.kraken2_db) : [],
 		params.skip_kraken2
 	)
+
+	ch_qfilter_peaks_inputs  = Channel.empty()
+	ch_qfilter_peaks_outputs = Channel.empty()
+	ch_qfilter_peaks_inputs
+		| mix(ENCODE_CHIP.out.peaks_filtered)
+		| mix(ENCODE_CHIP.out.idr_optimal)
+		| mix(ENCODE_CHIP.out.overlap_optimal)
+		| mix(ENCODE_CHIP.out.idr_conservative)
+		| mix(ENCODE_CHIP.out.overlap_conservative)
+		| set{ch_qfilter_peaks_inputs}
+	
+	QFILTER_PEAKS(ch_qfilter_peaks_inputs)
+	ch_qfilter_peaks_outputs = QFILTER_PEAKS.out.peak
 
 	ch_homer_peak_inputs = Channel.empty()
 	ch_homer_peak_inputs
@@ -130,6 +177,7 @@ workflow CHIPSEQ {
 		}
 		.set{ch_reproducibility_peaks_branched}
 
+
 	Channel.topic('versions')
 		.unique()
 		.map{ process, name, version -> [process, "  ${name}: \"${version}\""] }
@@ -155,6 +203,8 @@ workflow CHIPSEQ {
 		ENCODE_CHIP.out.spp.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
 		ENCODE_CHIP.out.peakstats.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.peakstats_sample.filter{it[0].reproducibility_mode == "idr"}.collect{it[1]}.ifEmpty{[]},
+		ENCODE_CHIP.out.peakstats_sample.filter{it[0].reproducibility_mode == "overlap"}.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
@@ -167,7 +217,8 @@ workflow CHIPSEQ {
 	)
 
 	publish:
-	MULTIQC.out >> "multiqc"
+	MULTIQC.out              >> "multiqc"
+	ch_qfilter_peaks_outputs >> "encode/macs2/qfiltered"
 
 
 }

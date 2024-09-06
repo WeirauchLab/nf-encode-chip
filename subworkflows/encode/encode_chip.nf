@@ -1,8 +1,9 @@
 
-include { DEEPTOOLS_PLOTFINGERPRINT } from "../../modules/local/deeptools/plotFingerprint/main"
-include { FILTER_PEAKS              } from "../../modules/encode/filter_peaks/main"
-include { LIB_QC                    } from "../../modules/encode/lib_qc/main"
-include { CALC_PEAKSTATS            } from '../../modules/encode/calc_peakstats/main'
+include { DEEPTOOLS_PLOTFINGERPRINT               } from "../../modules/local/deeptools/plotFingerprint/main"
+include { FILTER_PEAKS                            } from "../../modules/encode/filter_peaks/main"
+include { LIB_QC                                  } from "../../modules/encode/lib_qc/main"
+include { CALC_PEAKSTATS as CALC_PEAKSTATS_REPRO  } from '../../modules/encode/calc_peakstats/main'
+include { CALC_PEAKSTATS as CALC_PEAKSTATS_SAMPLE } from '../../modules/encode/calc_peakstats/main'
 
 include { TASK_ALIGN               } from './task_align.nf'
 include { TASK_FILTER              } from './task_filter.nf'
@@ -40,7 +41,9 @@ workflow ENCODE_CHIP {
 	skip_rm_duplicates
 	save_filtered_bam
 	skip_pseudoreplication
-	save_tagalign
+	save_sample_tagalign
+	save_pr_tagalign
+	save_pooled_tagalign
 	max_peaks
 	markdup_method
 
@@ -76,7 +79,9 @@ workflow ENCODE_CHIP {
 		TASK_FILTER.out.bam,
 		pseudorep_seed,
 		skip_pseudoreplication,
-		save_tagalign
+		save_sample_tagalign,
+		save_pr_tagalign,
+		save_pooled_tagalign
 	)
 	ch_tagalign = TASK_TAGALIGN.out.tagAlign
 
@@ -119,6 +124,9 @@ workflow ENCODE_CHIP {
 	// This takes peak files, matches them back against their tag align file
 	// and calculates the FRiP score / number of peaks
 
+	ch_peakstats_repro = Channel.empty()
+	ch_peakstats_sample = Channel.empty()
+
 	TASK_REPRODUCIBILITY.out.idr_conservative
 		| mix(TASK_REPRODUCIBILITY.out.idr_optimal)
 		| mix(TASK_REPRODUCIBILITY.out.overlap_conservative)
@@ -135,6 +143,27 @@ workflow ENCODE_CHIP {
 		| map{it -> it[1..-1]}
 		| set{ch_rep_peaks_prepared}
 
+	TASK_REPRODUCIBILITY.out.idr_peaks
+		| mix(TASK_REPRODUCIBILITY.out.overlap_peaks)
+		| filter{meta, peaks -> meta.sample_type == "sample"}
+		| map{meta, peaks ->
+			meta.id = "${meta.id}"
+			[meta.sample_id, meta, peaks]
+		}
+		| combine(
+			ch_tagalign
+				| filter{meta, ta -> meta.sample_type == "sample"}
+				| map{meta, ta -> [meta.sample_id, ta]},
+			by: 0
+		)
+		| map{it -> it[1..-1]}
+		| set{ch_sample_consistency_peaks_w_tagalign}
+	
+	CALC_PEAKSTATS_SAMPLE(ch_sample_consistency_peaks_w_tagalign)
+	ch_peakstats_sample
+		| mix(CALC_PEAKSTATS_SAMPLE.out.peakstats)
+		| set{ch_peakstats_sample}
+
 	Channel.empty()
 		| mix(
 			ch_peaks_filtered
@@ -144,9 +173,14 @@ workflow ENCODE_CHIP {
 		)
 		| mix(ch_rep_peaks_prepared)
 		| set{ch_peakstats_input}
+	
+	CALC_PEAKSTATS_REPRO(ch_peakstats_input)
+	ch_peakstats_repro
+		| mix(CALC_PEAKSTATS_REPRO.out.peakstats)
+		| set{ch_peakstats_repro}
 
 
-	CALC_PEAKSTATS(ch_peakstats_input)
+	
 
 
 	publish:
@@ -178,5 +212,6 @@ workflow ENCODE_CHIP {
 	reproducibility_stats_csv   = TASK_REPRODUCIBILITY.out.stats_csv
 	reproducibility_stats_json  = TASK_REPRODUCIBILITY.out.stats_json
 	lib_qc                      = LIB_QC.out.tsv
-	peakstats                   = CALC_PEAKSTATS.out.peakstats
+	peakstats                   = ch_peakstats_repro
+	peakstats_sample            = ch_peakstats_sample
 }
