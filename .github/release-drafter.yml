@@ -10,15 +10,18 @@ categories:
       - 'fix'
       - 'bugfix'
       - 'bug'
-  - title: 'Maintenance'
+  - title: 'Parameter Changes'
     labels:
-      - 'chore'
+      - 'parameter'
   - title: 'Documentation'
     labels:
       - 'documentation'
   - title: 'Resources'
     labels:
       - 'resource'
+  - title: 'Maintenance'
+    labels:
+      - 'chore'
   - title: 'Other'
     labels:
       - 'other'
