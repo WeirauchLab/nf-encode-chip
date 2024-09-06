@@ -32,7 +32,8 @@ class EncodePeakStats(BaseMultiqcModule):
                     "title": "Peak Statistics",
                 },
                 headers={
-                    "id": {"title": "Sample ID", "hidden": True},
+                    "id": {"title": "Peak ID", "hidden": True},
+                    "sample": {"title": "Sample ID", "hidden": True},
                     "group": {"title": "Group"},
                     "peak_file": {"title": "Peak File", "hidden": True},
                     "tagalign_file": {"title": "tagAlign", "hidden": True},
