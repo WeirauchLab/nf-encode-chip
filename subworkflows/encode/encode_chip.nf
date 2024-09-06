@@ -40,7 +40,9 @@ workflow ENCODE_CHIP {
 	skip_rm_duplicates
 	save_filtered_bam
 	skip_pseudoreplication
-	save_tagalign
+	save_sample_tagalign
+	save_pr_tagalign
+	save_pooled_tagalign
 	max_peaks
 	markdup_method
 
@@ -76,7 +78,9 @@ workflow ENCODE_CHIP {
 		TASK_FILTER.out.bam,
 		pseudorep_seed,
 		skip_pseudoreplication,
-		save_tagalign
+		save_sample_tagalign,
+		save_pr_tagalign,
+		save_pooled_tagalign
 	)
 	ch_tagalign = TASK_TAGALIGN.out.tagAlign
 
