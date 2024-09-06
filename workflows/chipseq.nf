@@ -98,7 +98,9 @@ workflow CHIPSEQ {
 		params.skip_rm_duplicates,
 		params.save_filtered_bam,
 		params.skip_pseudoreplication,
-		params.save_tagalign,
+		params.save_sample_tagalign,
+		params.save_pr_tagalign,
+		params.save_pooled_tagalign,
 		params.encode_max_macs2_peaks,
 		params.markdup_method
 	)
