@@ -135,6 +135,11 @@
                     "default": 30,
                     "description": "MAPQ threshold to apply for alignment filtering."
                 },
+                "spp_subsample_fragments": {
+                    "type": "integer",
+                    "default": 10000000,
+                    "description": "Number of fragments to subsample for strand cross-correlation analysis. If 0, no subsampling is performed."
+                },
                 "skip_low_mapq_filter": {
                     "type": "boolean",
                     "default": false,
@@ -155,10 +160,20 @@
                     "default": false,
                     "description": "Disables pseudoreplicate analysis."
                 },
-                "save_tagalign": {
+                "save_sample_tagalign": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Save tagAlign files."
+                    "description": "Save tagAlign files for samples."
+                },
+                "save_pr_tagalign": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save tagAlign files for pseudoreplicates."
+                },
+                "save_pooled_tagalign": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save tagAlign files for pooled replicates."
                 },
                 "markdup_method": {
                     "type": "string",
@@ -208,6 +223,11 @@
                     "default": 500000,
                     "description": "Maximum number of peaks to keep after calling peaks.",
                     "help_text": "Setting this to 0 will disable this cutoff."
+                },
+                "encode_macs2_post_qfilter": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "A q-filter to apply to ENCODE's peak outputs. This does NOT affect anything inside the ENCODE steps, and generates a new set of peaks."
                 }
             }
         },
