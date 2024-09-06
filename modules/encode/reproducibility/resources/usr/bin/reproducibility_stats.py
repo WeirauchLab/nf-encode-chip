@@ -77,9 +77,11 @@ class ReproducibilityStats:
                     for _ in f:
                         count += 1
                 self.rep_counts.append(count)
-            self.consistency_ratio = float(max(self.rep_counts)) / float(
-                min(self.rep_counts)
-            )
+            self.consistency_ratio = 0
+            if min(self.rep_counts) > 0:
+                self.consistency_ratio = float(max(self.rep_counts)) / float(
+                    min(self.rep_counts)
+                )
 
         if self.Nt is not None and self.Np is not None:
             if self.Nt > self.Np:
