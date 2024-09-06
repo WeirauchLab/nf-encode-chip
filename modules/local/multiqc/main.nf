@@ -18,6 +18,8 @@ process MULTIQC {
     path "data/spp/*"
     path "data/spp_xcor/*"
     path "data/encode_peakstats/*"
+    path "data/encode_consistency/idr/*"
+    path "data/encode_consistency/overlap/*"
     path "data/sourmash/gather/*"
     path "data/kraken2/*"
     path "data/encode_reproducibility_stats/idr/*"

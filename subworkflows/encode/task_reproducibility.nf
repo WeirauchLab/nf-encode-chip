@@ -191,6 +191,8 @@ workflow TASK_REPRODUCIBILITY {
 	ch_reproducible_peaks_branched.overlap_conservative >> "encode/macs2/overlap"
 
 	emit:
+	idr_peaks            = ch_idr_peaks
+	overlap_peaks        = ch_overlap_peaks
 	idr_optimal          = ch_reproducible_peaks_branched.idr_optimal
 	idr_conservative     = ch_reproducible_peaks_branched.idr_conservative
 	overlap_optimal      = ch_reproducible_peaks_branched.overlap_optimal
