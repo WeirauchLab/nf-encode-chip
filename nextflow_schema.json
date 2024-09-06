@@ -155,10 +155,20 @@
                     "default": false,
                     "description": "Disables pseudoreplicate analysis."
                 },
-                "save_tagalign": {
+                "save_sample_tagalign": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Save tagAlign files."
+                    "description": "Save tagAlign files for samples."
+                },
+                "save_pr_tagalign": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Save tagAlign files for pseudoreplicates."
+                },
+                "save_pooled_tagalign": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save tagAlign files for pooled replicates."
                 },
                 "markdup_method": {
                     "type": "string",

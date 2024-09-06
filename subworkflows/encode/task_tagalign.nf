@@ -7,7 +7,9 @@ workflow TASK_TAGALIGN {
 	ch_bam                 // [ val(meta), path(bam) ]
 	pseudorep_seed         // integer
 	skip_pseudoreplication // boolean
-	save_tagAlign          // boolean
+	save_sample_tagalign   // boolean
+	save_pr_tagalign       // boolean
+	save_pooled_tagalign   // boolean
 
 	main:
 
@@ -69,9 +71,23 @@ workflow TASK_TAGALIGN {
 	ch_tagalign_w_pr
 		| mix(CAT_FILES.out.output)
 		| set{ch_tagalign_output}
+	
+	ch_tagalign_output
+		| branch{meta, ta ->
+			sample_ta: meta.sample_type == "sample"
+				[meta, ta]
+			pr_ta: meta.sample_type == "pr"
+			pooled_ta: meta.sample_type == "pooled" && !meta.pr_rep
+				[meta, ta]
+			pooled_pr_ta: meta.sample_type == "pooled" && meta.pr_rep
+		}
+		| set{ch_tagalign_publish}
 
 	publish:
-	ch_tagalign_output >> (save_tagAlign ? "encode/tagAlign" : null)
+	ch_tagalign_publish.sample_ta    >> (save_sample_tagalign ? "encode/tagAlign" : null)
+	ch_tagalign_publish.pr_ta        >> (save_pr_tagalign ? "encode/tagAlign" : null)
+	ch_tagalign_publish.pooled_ta    >> (save_pooled_tagalign ? "encode/tagAlign" : null)
+	ch_tagalign_publish.pooled_pr_ta >> (save_pooled_tagalign && save_pr_tagalign ? "encode/tagAlign" : null)
 
 	emit:
 	tagAlign = ch_tagalign_output
