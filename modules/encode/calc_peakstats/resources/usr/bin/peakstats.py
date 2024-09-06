@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument("-p", "--prefix", help="Output file", required=True)
     parser.add_argument("-g", "--group", help="Sample group metadata")
     parser.add_argument("-i", "--id", help="Peak set ID")
+    parser.add_argument("-s", "--sample", help="Sample ID")
     parser.add_argument(
         "-v", "--version", action="version", version=__version__
     )
@@ -39,6 +40,7 @@ def main():
     log.info("calculating peak stats")
     output = {
         "id": args.id,
+        "sample": args.sample,
         "group": args.group,
         "peak_file": args.bed,
         "tagalign_file": args.tagalign,
