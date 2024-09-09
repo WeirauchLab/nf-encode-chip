@@ -1,12 +1,9 @@
 process MACS2_BDGCMP {
 	tag "${meta.id}"
 	cpus   = {1 * task.attempt}
-	memory = {16.GB * task.attempt}
-	time   = {2.h * task.attempt}
+	memory = {32.GB * task.attempt}
+	time   = {8.h * task.attempt}
 
-	cpus   = {1 * task.attempt}
-	memory = {8.GB * 1}
-	time   = {24.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools_macs2_ucsc-bedgraphtobigwig:831ad901e42b7721"
@@ -50,12 +47,20 @@ process MACS2_BDGCMP {
 	
 	echo "${scale_factor}"
 
+	# Adding small value to treat_pileup and control_lambda
+	# See: https://github.com/macs3-project/MACS/issues/265#issuecomment-431933580
+
+	macs2 bdgopt -i ${treat_pileup} -m add -p 0.1 -o p01_${treat_pileup}
+	macs2 bdgopt -i ${control_lambda} -m add -p 0.1 -o p01_${control_lambda}
+
 	macs2 bdgcmp \\
-		-t ${treat_pileup} \\
-		-c ${control_lambda} \\
+		-t p01_${treat_pileup} \\
+		-c p01_${control_lambda} \\
 		--o-prefix ${prefix} \\
 		-m ppois \\
 		-S ${scale_factor}
+	
+	rm -rf p01_${treat_pileup} p01_${control_lambda}
 
 	bedtools slop -i ${prefix}_ppois.bdg -g genome.sizes -b 0 \\
 		| awk '{if (\$3 != -1) print \$0}' \\

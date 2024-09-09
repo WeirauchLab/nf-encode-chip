@@ -5,7 +5,7 @@ process FILTER_PEAKS {
 	time   = {2.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
-	container "community.wave.seqera.io/library/bedtools:2.31.1--8fd0e3802b0dc02e"
+	container "community.wave.seqera.io/library/pybedtools:0.10.0--d0fa50534b6e9b75"
 
 	input:
 	tuple val(meta), path(narrowPeak)
@@ -20,14 +20,13 @@ process FILTER_PEAKS {
 	script:
 	def prefix = task.ext.prefix ?: "${meta.id}.excl_filt"
 	def args = task.ext.args ?: ""
+	def exclusion_peaks_arg = exclusion_peaks ? "--exclusion-peaks ${exclusion_peaks}" : ""
+	def regex_arg = filter_pattern ? "--regex '${filter_pattern}'" : ""
 	"""
-	bedtools intersect -a ${narrowPeak} -b ${exclusion_peaks} -v > ${prefix}.narrowPeak
-
-	if [[ -n '$filter_pattern' ]]; then
-		echo "Retaining peaks matching pattern '${filter_pattern}'"
-		grep -E '${filter_pattern}' ${prefix}.narrowPeak > tmp.narrowPeak
-		mv tmp.narrowPeak ${prefix}.narrowPeak
-	fi
-
+	filter_peaks.py \\
+		--input ${narrowPeak} \\
+		--output ${prefix}.narrowPeak \\
+		${exclusion_peaks_arg} \\
+		${regex_arg}
 	"""
 }
