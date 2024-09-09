@@ -1,12 +1,9 @@
 process MACS2_BDGCMP {
 	tag "${meta.id}"
 	cpus   = {1 * task.attempt}
-	memory = {16.GB * task.attempt}
-	time   = {2.h * task.attempt}
+	memory = {32.GB * task.attempt}
+	time   = {8.h * task.attempt}
 
-	cpus   = {1 * task.attempt}
-	memory = {8.GB * 1}
-	time   = {24.h * task.attempt}
 
 	conda "${moduleDir}/environment.yml"
 	container "community.wave.seqera.io/library/bedtools_macs2_ucsc-bedgraphtobigwig:831ad901e42b7721"
