@@ -47,12 +47,20 @@ process MACS2_BDGCMP {
 	
 	echo "${scale_factor}"
 
+	# Adding small value to treat_pileup and control_lambda
+	# See: https://github.com/macs3-project/MACS/issues/265#issuecomment-431933580
+
+	macs2 bdgopt -i ${treat_pileup} -m add -p 0.1 -o p01_${treat_pileup}
+	macs2 bdgopt -i ${control_lambda} -m add -p 0.1 -o p01_${control_lambda}
+
 	macs2 bdgcmp \\
-		-t ${treat_pileup} \\
-		-c ${control_lambda} \\
+		-t p01_${treat_pileup} \\
+		-c p01_${control_lambda} \\
 		--o-prefix ${prefix} \\
 		-m ppois \\
 		-S ${scale_factor}
+	
+	rm -rf p01_${treat_pileup} p01_${control_lambda}
 
 	bedtools slop -i ${prefix}_ppois.bdg -g genome.sizes -b 0 \\
 		| awk '{if (\$3 != -1) print \$0}' \\
