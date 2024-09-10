@@ -6,6 +6,7 @@ include { SAMTOOLS_FAIDX                      } from '../../modules/local/samtoo
 include { SAMTOOLS_FAIDX_CHR                  } from '../../modules/local/samtools/faidx_chr/main'
 include { BOWTIE2_BUILD                       } from '../../modules/local/bowtie2/build/main'
 include { UNTAR as UNTAR_BOWTIE2_INDEX        } from '../../modules/nf-core/untar/main'
+include { CALC_MAPPABLE_GENOME                } from '../../modules/local/calc_mappable_genome/main'
 
 workflow PREPARE_GENOME {
 	take:
@@ -41,12 +42,8 @@ workflow PREPARE_GENOME {
 	ch_genome_fai  = SAMTOOLS_FAIDX.out.fai
 
 	if (!gensz) {
-		ch_genome_fai
-			.map{ it[1] }
-			.splitCsv(sep: '\t')
-			.map {it -> it[1].toInteger() }
-			.reduce {x,y -> x + y}
-			.set {ch_gensz}
+		CALC_MAPPABLE_GENOME(ch_genome_fai)
+		ch_gensz = CALC_MAPPABLE_GENOME.out.value
 	} else {
 		ch_gensz = channel.value(gensz)
 	}
