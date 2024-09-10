@@ -296,6 +296,18 @@
                 }
             }
         },
+        "encode_options": {
+            "title": "ENCODE options",
+            "type": "object",
+            "description": "Options for ENCODE-style analysis.",
+            "properties": {
+                "use_encode_overlap": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use ENCODE's overlap analysis calculation instead of an updated bedtools command."
+                }
+            }
+        },
         "metagenomics_options": {
             "title": "Metagenomics options",
             "type": "object",
