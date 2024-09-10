@@ -42,11 +42,11 @@ workflow PREPARE_GENOME {
 
 	if (!gensz) {
 		ch_genome_fai
-			.map{ it[1] }
-			.splitCsv(sep: '\t')
-			.map {it -> it[1].toInteger() }
-			.reduce {x,y -> x + y}
-			.set {ch_gensz}
+			| map {it -> it[1]}
+			| splitCsv(sep: "\t")
+			| map { it -> it[1].toLong()}
+			| reduce { sum, x -> sum + x }
+			| set {ch_gensz}
 	} else {
 		ch_gensz = channel.value(gensz)
 	}
