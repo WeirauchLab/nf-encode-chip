@@ -14,7 +14,7 @@ Subworkflows
 */ 
 include { PREPARE_FASTQ       } from "../subworkflows/local/prepare_fastq"
 include { PREPARE_GENOME      } from "../subworkflows/local/prepare_genome"
-include { ENCODE_CHIP         } from "../subworkflows/encode/encode_chip"
+include { ENCODE              } from "../subworkflows/encode/encode"
 include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
 include { HOMER               } from "../subworkflows/local/homer"
@@ -89,7 +89,7 @@ workflow CHIPSEQ {
 		params.save_trimmed_fastq
 	)
 
-	ENCODE_CHIP(
+	ENCODE(
 		PREPARE_FASTQ.out.fastq,
 		PREPARE_GENOME.out.genome_fasta,
 		PREPARE_GENOME.out.genome_fai,
@@ -119,8 +119,8 @@ workflow CHIPSEQ {
 	)
 
 	DEEPTOOLS(
-		ENCODE_CHIP.out.bam_filtered,
-		ENCODE_CHIP.out.bam_filtered_index,
+		ENCODE.out.bam_filtered,
+		ENCODE.out.bam_filtered_index,
 		params.skip_bamcoverage
 	)
 
@@ -135,11 +135,11 @@ workflow CHIPSEQ {
 	ch_qfilter_peaks_inputs  = Channel.empty()
 	ch_qfilter_peaks_outputs = Channel.empty()
 	ch_qfilter_peaks_inputs
-		| mix(ENCODE_CHIP.out.peaks_filtered)
-		| mix(ENCODE_CHIP.out.idr_optimal)
-		| mix(ENCODE_CHIP.out.overlap_optimal)
-		| mix(ENCODE_CHIP.out.idr_conservative)
-		| mix(ENCODE_CHIP.out.overlap_conservative)
+		| mix(ENCODE.out.peaks_filtered)
+		| mix(ENCODE.out.idr_optimal)
+		| mix(ENCODE.out.overlap_optimal)
+		| mix(ENCODE.out.idr_conservative)
+		| mix(ENCODE.out.overlap_conservative)
 		| set{ch_qfilter_peaks_inputs}
 	
 	QFILTER_PEAKS(ch_qfilter_peaks_inputs)
@@ -147,10 +147,10 @@ workflow CHIPSEQ {
 
 	ch_homer_peak_inputs = Channel.empty()
 	ch_homer_peak_inputs
-		| mix(ENCODE_CHIP.out.idr_conservative)
-		| mix(ENCODE_CHIP.out.idr_optimal)
-		| mix(ENCODE_CHIP.out.overlap_conservative)
-		| mix(ENCODE_CHIP.out.overlap_optimal)
+		| mix(ENCODE.out.idr_conservative)
+		| mix(ENCODE.out.idr_optimal)
+		| mix(ENCODE.out.overlap_conservative)
+		| mix(ENCODE.out.overlap_optimal)
 		| set{ch_homer_peak_inputs}
 
 	HOMER(
@@ -165,12 +165,12 @@ workflow CHIPSEQ {
 	TRACKHUBS(
 		PREPARE_GENOME.out.genome_fai,
 		DEEPTOOLS.out.bigwig,
-		ENCODE_CHIP.out.fc_bigwig.mix(ENCODE_CHIP.out.pval_bigwig),
-		ENCODE_CHIP.out.idr_conservative.mix(ENCODE_CHIP.out.idr_optimal),
-		ENCODE_CHIP.out.overlap_conservative.mix(ENCODE_CHIP.out.overlap_optimal)
+		ENCODE.out.fc_bigwig.mix(ENCODE.out.pval_bigwig),
+		ENCODE.out.idr_conservative.mix(ENCODE.out.idr_optimal),
+		ENCODE.out.overlap_conservative.mix(ENCODE.out.overlap_optimal)
 	)
 
-	ENCODE_CHIP.out.reproducibility_stats_json
+	ENCODE.out.reproducibility_stats_json
 		.branch{meta, peak ->
 			idr: meta.reproducibility_mode == "idr"
 			overlap: meta.reproducibility_mode == "overlap"
@@ -188,23 +188,21 @@ workflow CHIPSEQ {
 		}
 		.set{ch_versions}
 
-	// ENCODE_CHIP.out.peakstats.view()
-
 	MULTIQC(
 		params.multiqc_config ? file(params.multiqc_config) : [],
 		PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]},
 		PREPARE_FASTQ.out.fastp_json.collect{it[1]}.ifEmpty{[]},
 		PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.sambamba_log.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.lib_qc.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.spp.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.peakstats.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.peakstats_sample.filter{it[0].reproducibility_mode == "idr"}.collect{it[1]}.ifEmpty{[]},
-		ENCODE_CHIP.out.peakstats_sample.filter{it[0].reproducibility_mode == "overlap"}.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.sambamba_log.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.lib_qc.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.spp.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.xcorr_csv.filter{meta,csv -> meta.sample_type in ["sample"]}.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.peakstats.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.peakstats_sample.filter{it[0].reproducibility_mode == "idr"}.collect{it[1]}.ifEmpty{[]},
+		ENCODE.out.peakstats_sample.filter{it[0].reproducibility_mode == "overlap"}.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.sourmash_gather_csv.collect{it[1]}.ifEmpty{[]},
 		METAGENOMICS.out.kraken2_report.collect{it[1]}.ifEmpty{[]},
 		ch_reproducibility_peaks_branched.idr.collect{it[1]}.ifEmpty{[]},
