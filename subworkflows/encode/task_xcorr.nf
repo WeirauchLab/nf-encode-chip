@@ -25,6 +25,7 @@ workflow TASK_XCORR {
 			def new_meta = meta.clone()
 			// frag_len calculated by parsing spp's output. 3rd column, first entry.
 			new_meta.frag_len = spp.readLines()[0].split("\t")[2] - ~/,.*/
+			new_meta.frag_len = new_meta.frag_len.toInteger()
 			[ new_meta, ta ]
 		}
 		| set { ch_tagalign_spp }
