@@ -53,15 +53,22 @@ workflow CHIPSEQ {
 
 	Channel
 		.fromList(samplesheetToList(params.input, "assets/schema_input.json"))
-		| map{ meta, fq1, fq2 -> 
+		| map{ meta, fq1, fq2 ->
+			def meta_clone = meta.clone()
+			meta_clone.adapter_1 = meta_clone.adapter_1 ?: params.adapter_1 ?: []
+			meta_clone.adapter_2 = meta_clone.adapter_2 ?: params.adapter_2 ?: []
+
 			if(fq2){
-				[ meta + [sample_type: "sample", single_end: false, pr_rep: []], [fq1, fq2] ]
+				[ meta_clone + [sample_type: "sample", single_end: false, pr_rep: []], [fq1, fq2] ]
 			} else {
-				[ meta + [sample_type: "sample", single_end: true, pr_rep: []], [fq1] ]
+				meta_clone.adapter_2 = []
+				[ meta_clone + [sample_type: "sample", single_end: true, pr_rep: []], [fq1] ]
 			}
 		}
 		| set{ch_input_base}
-	
+
+	ch_input_base.view()
+
 	ch_input_base
 		| branch{meta, fq -> 
 		control_sample_id: meta.control_sample_id
