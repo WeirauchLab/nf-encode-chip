@@ -32,6 +32,12 @@ else:
     key_motifs = {}
 
 def read_metrics_file(root, filename, col_mapping, *, dtype=None, index_col='Sample', use='asis'):
+    filepath = root / filename
+    if not filepath.exists():
+        return pd.DataFrame(
+            index=[index_col],
+            columns=col_mapping.values()
+        )
     df = pd.read_table(
         root / filename,
         index_col=index_col,
@@ -41,9 +47,9 @@ def read_metrics_file(root, filename, col_mapping, *, dtype=None, index_col='Sam
     if use == 'asis':
         return df
     if use == 'read1':
-        return df.rename(index=lambda x: x.removesuffix('_1').removesuffix('_read1'))
+        return df.rename(index=lambda x: x.removesuffix('_read1'))
     if use == 'read2':
-        return df.rename(index=lambda x: x.removesuffix('_2').removesuffix('_read2'))
+        return df.rename(index=lambda x: x.removesuffix('_read2'))
     raise ValueError(f"The use argument should be one of 'asis', 'read1', or 'read2' ({use} given)")
 
 def collect_experiment(multiqc_path, motifs_of_interest):
@@ -67,22 +73,25 @@ def collect_experiment(multiqc_path, motifs_of_interest):
             multiqc_path / f"multiqc_encode_{peakset.lower()}_reproducibility.txt"
         ) for peakset in ("IDR", "Overlap") ],
         axis=1
-    ).merge(
-        parse_motif_results(
-            pd.read_table(
-                multiqc_path / "multiqc_homer_findmotifsgenome.txt",
-                converters={'pct_of_target_sequences_with_motif': lambda x: float(x.rstrip('%'))}
-            ),
-            {
-                'motif_name': 'Top Motif', 
-                'log10_p_value': 'Top P(log10)',
-                'pct_of_target_sequences_with_motif': 'Top Motif Fg Pct'
-            }, 
-            id_col='Sample'
-        ),
-        left_index=True, 
-        right_index=True
     )
+    
+    if (multiqc_path / "multiqc_homer_findmotifsgenome.txt").exists():
+        peak_info = peak_info.merge(
+            parse_motif_results(
+                pd.read_table(
+                    multiqc_path / "multiqc_homer_findmotifsgenome.txt",
+                    converters={'pct_of_target_sequences_with_motif': lambda x: float(x.rstrip('%'))}
+                ),
+                {
+                    'motif_name': 'Top Motif', 
+                    'log10_p_value': 'Top P(log10)',
+                    'pct_of_target_sequences_with_motif': 'Top Motif Fg Pct'
+                }, 
+                id_col='Sample'
+            ),
+            left_index=True, 
+            right_index=True
+        )
     
     if peak_info.index.isin(motifs_of_interest.keys()).any():
         peak_info = peak_info.merge(
@@ -105,6 +114,11 @@ def collect_experiment(multiqc_path, motifs_of_interest):
     return df.merge(peak_info, left_on='Group', right_index=True)
 
 def get_encode_peak_stats(peakset, filename):
+    if not filename.exists():
+        return pd.DataFrame(
+            index=["Group"],
+            columns=[f"{peakset} Cons # Peaks", f"{peakset} Opt # Peaks"]
+        )
     df = pd.read_table(
         filename,
         index_col='Sample',
