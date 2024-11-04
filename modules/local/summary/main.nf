@@ -9,7 +9,7 @@ process SUMMARY {
     path summary_config
     path key_motif_config
     path multiqc_data
-    tuple val(meta), path("homer/*.tsv")
+    path "homer/*.tsv"
 
     output:
     path "ChIP_summary.xlsx", emit: summary

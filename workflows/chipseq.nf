@@ -28,6 +28,9 @@ include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } 
 if (!workflow.containerEngine && params.homer_log2_mode) {
 	error("ERROR: homer log2 mode specified, but no container engine is used. This option can only be set when using Docker / Singularity / Apptainer.")
 }
+if (params.summary_motifs && params.skip_homer_findmotifsgenome) {
+	error("ERROR: Specific motifs are highlighted in the summary with --summary-motifs, but HOMER findMotifsGenome is skipped.  You can't have both.")
+}
 
 // Validate input parameters
 validateParameters()
@@ -240,7 +243,7 @@ workflow CHIPSEQ {
 		file(params.summary_config),
 		params.summary_motifs ? file(params.summary_motifs) : [],
 		MULTIQC.out.data,
-		HOMER.out.findMotifsGenome_tsv
+		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]}
 	)
 
 	publish:
