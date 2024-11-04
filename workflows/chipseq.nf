@@ -21,11 +21,15 @@ include { HOMER               } from "../subworkflows/local/homer"
 include { TRACKHUBS           } from "../subworkflows/local/trackhubs"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
+include { SUMMARY } from "../modules/local/summary/main"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 
 if (!workflow.containerEngine && params.homer_log2_mode) {
 	error("ERROR: homer log2 mode specified, but no container engine is used. This option can only be set when using Docker / Singularity / Apptainer.")
+}
+if (params.summary_motifs && params.skip_homer_findmotifsgenome) {
+	error("ERROR: Specific motifs are highlighted in the summary with --summary-motifs, but HOMER findMotifsGenome is skipped.  You can't have both.")
 }
 
 // Validate input parameters
@@ -107,7 +111,8 @@ workflow CHIPSEQ {
 	PREPARE_FASTQ(
 		ch_input,
 		params.skip_adapter_trimming,
-		params.save_trimmed_fastq
+		params.save_trimmed_fastq,
+		params.save_subsampled_fastq
 	)
 
 	ENCODE(
@@ -214,6 +219,7 @@ workflow CHIPSEQ {
 		PREPARE_FASTQ.out.fastqc_raw_zip.collect{it[1]}.ifEmpty{[]},
 		PREPARE_FASTQ.out.fastp_json.collect{it[1]}.ifEmpty{[]},
 		PREPARE_FASTQ.out.fastqc_trimmed_zip.collect{it[1]}.ifEmpty{[]},
+		PREPARE_FASTQ.out.seqkit_tsv.collect{it[1]}.ifEmpty{[]},
 		ENCODE.out.bowtie2_log.collect{it[1]}.ifEmpty{[]},
 		ENCODE.out.filtered_flagstat.collect{it[1]}.ifEmpty{[]},
 		ENCODE.out.picard_metrics.collect{it[1]}.ifEmpty{[]},
@@ -235,8 +241,16 @@ workflow CHIPSEQ {
 		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
+	SUMMARY(
+		file(params.summary_config),
+		params.summary_motifs ? file(params.summary_motifs) : [],
+		MULTIQC.out.data,
+		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]}
+	)
+
 	publish:
 	MULTIQC.out              >> "multiqc"
+	SUMMARY.out              >> "multiqc"
 	ch_qfilter_peaks_outputs >> "encode/macs2/qfiltered"
 
 
