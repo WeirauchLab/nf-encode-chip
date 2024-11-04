@@ -1,6 +1,8 @@
 sample_names_ignore:
   - "*_pr1"
   - "*_pr2"
+  - "*_pooled"
+
 table_sample_merge:
   "R1": "_read1"
   "R2": "_read2"
@@ -14,7 +16,11 @@ extra_fn_clean_exts:
   - "_fingerprint.tab"
   - ".nodup"
 
+thousandsSep_format: ','
+
 report_section_order:
+  seqkit:
+    order: 1010
   fastp:
     order: 1000
   bowtie2:
