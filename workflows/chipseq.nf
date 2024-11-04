@@ -21,6 +21,7 @@ include { HOMER               } from "../subworkflows/local/homer"
 include { TRACKHUBS           } from "../subworkflows/local/trackhubs"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
+include { SUMMARY } from "../modules/local/summary/main"
 
 include { validateParameters; paramsHelp; paramsSummaryLog; samplesheetToList } from 'plugin/nf-schema'
 
@@ -235,8 +236,16 @@ workflow CHIPSEQ {
 		ch_versions.collectFile(name: "software_mqc_versions.yml", newLine: true)
 	)
 
+	SUMMARY(
+		file(params.summary_config),
+		params.summary_motifs ? file(params.summary_motifs) : [],
+		MULTIQC.out.data,
+		HOMER.out.findMotifsGenome_tsv
+	)
+
 	publish:
 	MULTIQC.out              >> "multiqc"
+	SUMMARY.out              >> "multiqc"
 	ch_qfilter_peaks_outputs >> "encode/macs2/qfiltered"
 
 
