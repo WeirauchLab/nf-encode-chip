@@ -2,8 +2,8 @@ process SUMMARY {
     tag "summary"
     cache false
 
-	conda "${moduleDir}/environment.yml"
-	container "community.wave.seqera.io/library/pip_pyyaml_openpyxl_pandas:481b30b6e965b4cd"
+    conda "${moduleDir}/environment.yml"
+    container "community.wave.seqera.io/library/pip_pyyaml_openpyxl_pandas:481b30b6e965b4cd"
 
     input:
     path summary_config
