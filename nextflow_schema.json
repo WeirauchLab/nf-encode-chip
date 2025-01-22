@@ -56,7 +56,8 @@
                 "mito_chr_name": {
                     "type": "string",
                     "description": "Name of the mitochondria chromosome in the genome fasta",
-                    "help_text": "Provide this to be able to identify and remove mitochrondia-related peaks / sequences."
+                    "help_text": "Provide this to be able to identify and remove mitochrondia-related peaks / sequences.",
+                    "default": "chrM"
                 },
                 "bowtie2_index": {
                     "type": "string",
