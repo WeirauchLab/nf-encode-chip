@@ -6,15 +6,21 @@
 		"properties": {
 			"id": {
 				"type": "string",
-				"meta": ["id"]
+				"meta": [
+					"id"
+				]
 			},
 			"replicate": {
 				"type": "string",
-				"meta": ["replicate"]
+				"meta": [
+					"replicate"
+				]
 			},
 			"group": {
 				"type": "string",
-				"meta": ["group"]
+				"meta": [
+					"group"
+				]
 			},
 			"fastq_1": {
 				"type": "string",
@@ -26,10 +32,15 @@
 				"type": "string",
 				"pattern": "^\\S+\\.f(ast)?q\\.gz$",
 				"format": "file-path",
-				"errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
+				"errorMessage": "FastQ file for reads 2 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'",
 				"default": null
 			}
 		},
-		"required": ["id", "fastq_1", "replicate", "group"]
+		"required": [
+			"id",
+			"fastq_1",
+			"replicate",
+			"group"
+		]
 	}
 }

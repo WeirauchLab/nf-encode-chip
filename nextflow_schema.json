@@ -55,8 +55,8 @@
                 },
                 "mito_chr_name": {
                     "type": "string",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row."
+                    "description": "Name of the mitochondria chromosome in the genome fasta",
+                    "help_text": "Provide this to be able to identify and remove mitochrondia-related peaks / sequences."
                 },
                 "bowtie2_index": {
                     "type": "string",
