@@ -19,6 +19,7 @@ include { METAGENOMICS        } from "../subworkflows/local/metagenomics"
 include { DEEPTOOLS           } from "../subworkflows/local/deeptools"
 include { HOMER               } from "../subworkflows/local/homer"
 include { TRACKHUBS           } from "../subworkflows/local/trackhubs"
+include { RGREAT              } from "../subworkflows/local/rgreat"
 
 include { MULTIQC } from "../modules/local/multiqc/main"
 include { SUMMARY } from "../modules/local/summary/main"
@@ -196,6 +197,38 @@ workflow CHIPSEQ {
 		ENCODE.out.overlap_conservative.mix(ENCODE.out.overlap_optimal)
 	)
 
+	// ------------------------
+	// GREAT
+	// ------------------------
+	ch_rgreat_libs = Channel.empty()
+	if(params.great_libs){
+		ch_rgreat_libs = Channel.fromList(samplesheetToList(params.great_libs, "assets/schema_great_libs.json"))
+	}
+	ch_rgreat_peak_inputs = Channel.empty()
+	ch_rgreat_ext_tss = Channel.empty()
+	ch_rgreat_csv = Channel.empty()
+	ch_rgreat_peak_inputs
+		| mix(ENCODE.out.idr_conservative)
+		| mix(ENCODE.out.idr_optimal)
+		| mix(ENCODE.out.overlap_conservative)
+		| mix(ENCODE.out.overlap_optimal)
+		| set{ch_rgreat_peak_inputs}
+
+	if(!params.skip_rgreat){
+		RGREAT(
+			ch_rgreat_peak_inputs,
+			ch_rgreat_libs,
+			PREPARE_GENOME.out.gtf,
+			PREPARE_GENOME.out.genome_fai
+		)
+		ch_rgreat_ext_tss = RGREAT.out.ext_tss
+		ch_rgreat_csv = RGREAT.out.csv
+	}
+	
+
+
+
+
 	ENCODE.out.reproducibility_stats_json
 		.branch{meta, peak ->
 			idr: meta.reproducibility_mode == "idr"
@@ -248,10 +281,15 @@ workflow CHIPSEQ {
 		HOMER.out.findMotifsGenome_tsv.collect{it[1]}.ifEmpty{[]}
 	)
 
+	emit:
+	rgreat_ext_tss = ch_rgreat_ext_tss
+	rgreat_csv = ch_rgreat_csv
+
 	publish:
 	MULTIQC.out              >> "multiqc"
 	SUMMARY.out              >> "multiqc"
 	ch_qfilter_peaks_outputs >> "encode/macs2/qfiltered"
+	
 
 
 }

@@ -442,6 +442,56 @@
                 }
             }
         },
+        "rgreat_options": {
+            "title": "rGREAT options",
+            "type": "object",
+            "description": "Options for running rGREAT on output bed files.",
+            "properties": {
+                "skip_rgreat": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip rGREAT."
+                },
+                "great_libs": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Path to CSV file containing information about the GREAT libraries to use.",
+                    "default": null
+                },
+                "great_mode": {
+                    "type": "string",
+                    "default": "basalPlusExt",
+                    "enum": [
+                        "basalPlusExt",
+                        "twoClosest",
+                        "oneClosest"
+                    ],
+                    "description": "Mode to use for rGREAT."
+                },
+                "great_extension": {
+                    "type": "integer",
+                    "default": 1000000,
+                    "description": "Extension to use for rGREAT."
+                },
+                "great_basal_upstream": {
+                    "type": "integer",
+                    "default": 5000,
+                    "description": "Basal upstream region to use for rGREAT."
+                },
+                "great_basal_downstream": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Basal downstream region to use for rGREAT."
+                },
+                "extend_tss_ext_args": {
+                    "type": "string",
+                    "default": "--type gene --gene-id-col gene_name --gene-id-type SYMBOL",
+                    "description": "Extra arguments to pass to extend TSS."
+                }
+            }
+        },
         "multiqc_options": {
             "title": "MultiQC options",
             "type": "object",
