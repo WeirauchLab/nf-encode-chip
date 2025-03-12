@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://raw.githubusercontent.com/WeirauchLab/nf-encode-chip/master/assets/schema_great_libs.json",
+	"title": "WeirauchLab/nf-encode-chip pipeline - params.great_libs schema",
+	"description": "Schema for the file provided with params.great_libs",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"id": {
+				"type": "string",
+				"pattern": "^\\S+$",
+				"errorMessage": "Sample name must be provided and cannot contain spaces",
+				"meta": [
+					"id",
+					"great_lib_id"
+				]
+			},
+			"gmt": {
+				"type": "string",
+				"pattern": "^\\S+\\.(gmt|txt|tsv)$",
+				"format": "file-path",
+				"exists": true,
+				"errorMessage": "GMT file must be provided, cannot contain spaces and must have extension of '.gmt', '.txt', or '.tsv'"
+			}
+		},
+		"required": [
+			"id",
+			"gmt"
+		]
+	}
+}
