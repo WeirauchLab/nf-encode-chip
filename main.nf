@@ -10,6 +10,7 @@ workflow {
 	publish:
 	CHIPSEQ.out.rgreat_ext_tss >> "great"
 	CHIPSEQ.out.rgreat_csv >> "great"
+	CHIPSEQ.out.rgreat_summary_xlsx >> "great"
 }
 
 output {

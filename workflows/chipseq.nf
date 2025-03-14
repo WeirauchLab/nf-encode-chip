@@ -284,6 +284,7 @@ workflow CHIPSEQ {
 	emit:
 	rgreat_ext_tss = ch_rgreat_ext_tss
 	rgreat_csv = ch_rgreat_csv
+	rgreat_summary_xlsx = RGREAT.out.summary_xlsx
 
 	publish:
 	MULTIQC.out              >> "multiqc"

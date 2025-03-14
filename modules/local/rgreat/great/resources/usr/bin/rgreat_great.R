@@ -8,9 +8,13 @@ parser$add_argument("--bed", help = "Bed / peak file to use as input")
 parser$add_argument("--tss", help = "extended TSS RDS to use")
 parser$add_argument("--gmt", help = "GMT-formatted library of gene sets")
 parser$add_argument("--padj-method", default = "BH", help = "Method to pass to p.adjust")
+parser$add_argument("--peak-id", help = "specific value to put into the peak_id column. If none, will use the filename")
+parser$add_argument("--gmt-id", help = "specific value to put into the gmt_id column. If none, will use the filename")
 parser$add_argument("--prefix", default = "great")
 
 opt <- parser$parse_args()
+if (is.null(opt$peak_id)) opt$peak_id <- opt$bed
+if (is.null(opt$gmt_id)) opt$gmt_id <- opt$gmt
 
 
 library(tidyverse)
@@ -18,14 +22,14 @@ library(GenomicRanges)
 library(rGREAT)
 library(rtracklayer)
 
-read_gmt <- function(file, split = "\t+") {
+read_gmt <- function(file, split = "\t") {
     if (!file.exists(file)) cli_abort("GMT file not found: {file}")
     cli_inform("Importing GMT file: {file}")
     lines <- readLines(file)
-    lines <- strsplit(lines, split = split)
+    lines <- strsplit(lines, split = split, fixed = TRUE)
     lines <-
         set_names(
-            map(lines, ~ .x[-1]),
+            map(lines, ~ .x[-c(1, 2)]),
             map_chr(lines, ~ .x[1])
         )
     lines
@@ -46,10 +50,12 @@ prepare_tss <-
     }
 
 process_results <-
-    function(great_obj, padj_method = "BH") {
+    function(great_obj, padj_method = "BH", peak_id = "peakset", gmt_id = "gmt") {
         n_gene_total <- length(unique(great_obj@extended_tss$gene_id))
         df <-
             as_tibble(great_obj@table) |>
+            mutate(peak_id = peak_id, gmt_id = gmt_id) |>
+            dplyr::relocate(peak_id, gmt_id, .before = everything()) |>
             mutate(
                 log10_p_value =
                     pbinom(
@@ -78,7 +84,8 @@ process_results <-
                 p_value_hyper = 10^log10_p_value_hyper,
                 p_adjust_hyper = p.adjust(p_value_hyper, method = padj_method)
             ) |>
-            dplyr::relocate(log10_p_value_hyper, .before = p_value_hyper)
+            dplyr::relocate(log10_p_value_hyper, .before = p_value_hyper) |>
+            dplyr::arrange(log10_p_value)
 
         df
     }
@@ -93,5 +100,5 @@ bed_gr <- prepare_peak(opt$bed)
 tss <- prepare_tss(opt$tss)
 gene_set <- read_gmt(opt$gmt)
 gr_res <- great(gr = bed_gr, gene_sets = gene_set, extended_tss = tss)
-res_df <- process_results(gr_res, padj_method = opt$padj_method)
+res_df <- process_results(gr_res, padj_method = opt$padj_method, peak_id = opt$peak_id, gmt_id = opt$gmt_id)
 export_results_df(res_df, output_file = paste0(opt$prefix, ".csv"))
