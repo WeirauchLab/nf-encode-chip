@@ -130,3 +130,38 @@ Then run the pipeline with the parameters file:
 nextflow run WeirauchLab/nf-encode-chip -params-file params.json
 
 ```
+
+## GREAT Libraries
+
+[GREAT](https://great.stanford.edu/great/public/html/) is a tool for assessing functional enrichment of chromatin regions.
+
+This is implemented through the R package, [rGREAT](https://jokergoo.github.io/rGREAT/).
+
+Libraries are passed in for analysis through the `params.great_libs`, which accepts a CSV-formatted file.
+
+This is a two-column file, containing `id` and `gmt`.
+
+```csv
+id,gmt
+example_library_1,/path/to/example_library_1.gmt
+```
+
+`gmt` accepts the following file formats:
+
+- txt
+- tsv
+- gmt
+
+Each format needs to match the GMT file format. This is represented as a tab separated file in the following format:
+
+```tsv
+example_term  description/meta  gene1 gene2 gene3 ...
+example_term2  description/meta  gene1 gene2 gene3 ...
+```
+
+There should be no header! If there is no description, then an empty tab should be provided there. The `example_term2` below has two tabs between the term label and the genes.
+
+```tsv
+example_term  description/meta  gene1 gene2 gene3 ...
+example_term2    gene1 gene2 gene3 ...
+```

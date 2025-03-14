@@ -62,3 +62,9 @@ Danecek, Petr, James K Bonfield, Jennifer Liddle, John Marshall, Valeriu Ohan, M
 ### Sourmash
 
 Irber, Luiz, N. Tessa Pierce-Ward, Mohamed Abuelanin, Harriet Alexander, Abhishek Anant, Keya Barve, Colton Baumler, et al. 2024. “Sourmash V4: A Multitool to Quickly Search, Compare, and Analyze Genomic and Metagenomic Data Sets.” Journal of Open Source Software 9 (98): 6830. https://doi.org/10.21105/joss.06830.
+
+### rGREAT
+
+Zuguang Gu, Daniel Hübschmann, rGREAT: an R/bioconductor package for functional enrichment on genomic regions, Bioinformatics, Volume 39, Issue 1, January 2023, btac745, https://doi.org/10.1093/bioinformatics/btac745
+
+McLean CY, Bristor D, Hiller M, Clarke SL, Schaar BT, Lowe CB, Wenger AM, Bejerano G. GREAT improves functional interpretation of cis-regulatory regions. Nat Biotechnol. 2010 May;28(5):495-501. doi: 10.1038/nbt.1630. Epub 2010 May 2. PMID: 20436461; PMCID: PMC4840234.
