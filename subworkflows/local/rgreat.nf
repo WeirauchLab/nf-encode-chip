@@ -1,13 +1,13 @@
-include { EXTEND_TSS       } from '../../modules/local/rgreat/extend_tss/index'
-include { RGREAT_GREAT     } from '../../modules/local/rgreat/great/index'
+include { EXTEND_TSS } from '../../modules/local/rgreat/extend_tss/index'
+include { RGREAT_GREAT } from '../../modules/local/rgreat/great/index'
 include { RGREAT_SUMMARIZE } from '../../modules/local/rgreat/summarize/index'
 
 workflow RGREAT {
 	take:
-	ch_bed         // channel [ val(meta), path(bed) ]
+	ch_bed // channel [ val(meta), path(bed) ]
 	term_libraries // channel [ [id:], file(gmt) ]
-	ch_gtf         // channel [ val(meta), path(gtf) ]
-	ch_fai         // channel [ val(meta), path(chrsizes) ]
+	ch_gtf // channel [ val(meta), path(gtf) ]
+	ch_fai // channel [ val(meta), path(chrsizes) ]
 
 	main:
 
@@ -36,7 +36,7 @@ workflow RGREAT {
 	RGREAT_SUMMARIZE(ch_summary_input)
 
 	emit:
-	ext_tss      = EXTEND_TSS.out.rds
-	csv          = RGREAT_GREAT.out.csv
+	ext_tss = EXTEND_TSS.out.rds
+	csv = RGREAT_GREAT.out.csv
 	summary_xlsx = RGREAT_SUMMARIZE.out.xlsx
 }
