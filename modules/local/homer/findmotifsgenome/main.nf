@@ -34,8 +34,9 @@ process HOMER_FINDMOTIFSGENOME {
 		-preparse \\
 		${motif_lib ? "-mknown ${motif_lib}" : ""} \\
 		${args}
-	
-	tar -zcvf ${prefix}.tar.gz ${prefix}
+
+	# BusyBox tar does not support -z option
+	tar -c ${prefix} | gzip > ${prefix}.tar.gz 
 
 	if [ -f "${prefix}/homerResults.html" ]; then 
 		cp "${prefix}/homerResults.html" ${prefix}_homerResults.html
