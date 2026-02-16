@@ -87,12 +87,12 @@ workflow TASK_REPRODUCIBILITY {
 			new_meta.id = "${new_meta.group}_${new_meta.peak1}-vs-${new_meta.peak2}"
 			[peak_pair[0],peak_pair[1], new_meta, peak]
 		}
-		| join(
+		| combine(
 			ch_peaks_branched.sample.map{ meta, peak -> [meta.sample_id, peak] },
 			by: 0
 		)
 		| map{rep1, rep2, meta, peak, peak1 -> [rep2, meta, peak, peak1]}
-		| join(
+		| combine(
 			ch_peaks_branched.sample.map{ meta, peak -> [meta.sample_id, peak] },
 			by: 0
 		)
@@ -187,6 +187,8 @@ workflow TASK_REPRODUCIBILITY {
 		| set{ch_reproducible_peaks_branched}
 
 	publish:
+	ch_idr_peaks										>> "encode/macs2/idr"
+	ch_overlap_peaks									>> "encode/macs2/overlap"
 	ch_reproducible_peaks_branched.idr_optimal          >> "encode/macs2/idr"
 	ch_reproducible_peaks_branched.idr_conservative     >> "encode/macs2/idr"
 	ch_reproducible_peaks_branched.overlap_optimal      >> "encode/macs2/overlap"
