@@ -189,12 +189,28 @@ workflow CHIPSEQ {
 		params.skip_homer_annotatepeaks
 	)
 
+	// -------------------------
+	// Trackhubs
+	// -------------------------
+
+	// Only reproducible peaks that have rows > 0 are included in the trackhub
+
+	ch_trackhub_idr_peaks = channel.empty()
+		.mix(ENCODE.out.idr_conservative)
+		.mix(ENCODE.out.idr_optimal)
+		.filter{ meta, peak -> peak.countLines() > 0 }
+
+	ch_trackhub_overlap_peaks = channel.empty()
+		.mix(ENCODE.out.overlap_conservative)
+		.mix(ENCODE.out.overlap_optimal)
+		.filter{ meta, peak -> peak.countLines() > 0 }
+
 	TRACKHUBS(
 		PREPARE_GENOME.out.genome_fai,
 		DEEPTOOLS.out.bigwig,
 		ENCODE.out.fc_bigwig.mix(ENCODE.out.pval_bigwig),
-		ENCODE.out.idr_conservative.mix(ENCODE.out.idr_optimal),
-		ENCODE.out.overlap_conservative.mix(ENCODE.out.overlap_optimal)
+		ch_trackhub_idr_peaks,
+		ch_trackhub_overlap_peaks
 	)
 
 	// ------------------------
