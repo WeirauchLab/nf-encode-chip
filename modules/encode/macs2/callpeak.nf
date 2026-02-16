@@ -37,7 +37,7 @@ process MACS2_CALLPEAK {
 		> tmp.narrowPeak \\
 		&& mv tmp.narrowPeak ${prefix}_peaks.narrowPeak
 	
-	if [$max_peaks -gt 0]; then
+	if [ $max_peaks -gt 0 ]; then
 		head -n ${max_peaks} ${prefix}_peaks.narrowPeak > tmp.narrowPeak \\
 		&& mv tmp.narrowPeak ${prefix}_peaks.narrowPeak
 	fi
