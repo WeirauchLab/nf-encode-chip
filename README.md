@@ -1,6 +1,8 @@
 # NF-ENCODE-CHIP
 
-This is a nextflow-based pipeline designed to process ChIP-seq data based on
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20672015.svg)](https://doi.org/10.5281/zenodo.20672015)
+
+This is a Nextflow-based pipeline designed to process ChIP-seq data based on
 the ENCODE's ChIP-seq pipeline. It attempts to replicate the commands
 that would normally be processed by ENCODE, but in a Nextflow-native format.
 
@@ -8,9 +10,13 @@ Please see the later section for more details.
 
 ## Citation / Credits
 
-Please be sure you cite ENCODE's ChIP-seq pipeline if you use this pipeline:
+Please be sure you cite ENCODE's ChIP-seq pipeline if you use this pipeline ([ref](https://github.com/ENCODE-DCC/atac-seq-pipeline/issues/219#issuecomment-589256101)):
 
-- [ENCODE-DCC/chip-seq-pipeline2:2.0.0](https://github.com/ENCODE-DCC/chip-seq-pipeline2/tree/v2.0.0)
+- [ENCODE-DCC/chip-seq-pipeline](https://github.com/ENCODE-DCC/chip-seq-pipeline)
+
+> ENCODE Project Consortium (2012). An integrated encyclopedia of DNA elements in the human genome. Nature, 489(7414), 57–74. https://doi.org/10.1038/nature11247
+>
+> ENCODE-DCC/chip-seq-pipeline [Computer software]. ([2013](https://github.com/ENCODE-DCC/chip-seq-pipeline/commit/9ca8c010c7bf14a44f8375be4b3abfbdfb1ec621)). Retrieved from https://github.com/ENCODE-DCC/chip-seq-pipeline
 
 Additionally, a select set of nf-core modules are used in this pipeline. Please be sure to cite these as well:
 
@@ -209,3 +215,16 @@ Check the documentation folder! This contains:
 - rehash of the quickstart
 - description of outputs
 - comparison of commands between ENCODE and Nextflow
+
+## Contributors and License
+
+<!--
+| Contributor             | Role
+|-------------------------|-----------------
+| XXXXXX XXXXXXXXXX, PhD  | Author
+| XXXXXXX XXXXXXXXX, PhD  | Contributor
+-->
+
+See [#131](https://github.com/WeirauchLab/nf-encode-chip/issues/131) for licensing information.
+
+© 2026, Cincinnati Children's Hospital and contributors.
