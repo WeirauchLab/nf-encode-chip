@@ -80,7 +80,7 @@ def collect_experiment(multiqc_path, motifs_of_interest):
             parse_motif_results(
                 pd.read_table(
                     multiqc_path / "multiqc_homer_findmotifsgenome.txt",
-                    converters={'pct_of_target_sequences_with_motif': lambda x: float(x.rstrip('%'))}
+                    converters={'pct_of_target_sequences_with_motif': lambda x: pd.to_numeric(x.rstrip('%'), errors='coerce')}
                 ),
                 {
                     'motif_name': 'Top Motif', 
@@ -154,7 +154,7 @@ def find_key_motifs(homer_dir, motifs_of_interest):
         for resultfile in Path(homer_dir).glob(f"{group}_*.tsv"):
             df = pd.read_table(
                 resultfile,
-                converters={'pct_of_target_sequences_with_motif': lambda x: float(x.rstrip('%'))}
+                converters={'pct_of_target_sequences_with_motif': lambda x: pd.to_numeric(x.rstrip('%'), errors='coerce')}
             )
             hasmotif = df.motif_name.str.contains(pattern, case=False, na=False)
             yield df.loc[hasmotif.idxmax()].to_frame().T
